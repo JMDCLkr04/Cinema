@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Numeric, DateTime, ForeignKey, Text
+from sqlalchemy import Column, String, Numeric, DateTime, ForeignKey, Text, Integer
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from app.database import Base
@@ -26,6 +26,8 @@ class Pelicula(Base):
     genero = Column(Text, nullable=True)
     descripcion = Column(Text, nullable=True)
     clasificacion = Column(Text, nullable=True)
+    duracion = Column(Text, nullable=True)
+    image_url = Column(Text, nullable=True)
     
     # Relaciones
     funciones = relationship("Funcion", back_populates="pelicula")
@@ -39,6 +41,8 @@ class Sala(Base):
     capacidad = Column(Numeric(10, 2), nullable=True)
     tipo = Column(Text, nullable=True)
     estado = Column(Text, nullable=True)
+    filas = Column(Integer, nullable=True)
+    columnas = Column(Integer, nullable=True)
     
     # Relaciones
     asientos = relationship("Asiento", back_populates="sala")
@@ -81,6 +85,8 @@ class Reserva(Base):
     estado = Column(Text, nullable=True)
     id_funcion = Column(UUID(as_uuid=True), ForeignKey("funcion.id_funcion"), nullable=True)
     id_usuario = Column(UUID(as_uuid=True), ForeignKey("usuario.id_usuario"), nullable=True)
+    total = Column(Numeric(10, 2), nullable=True)
+    fecha_reserva = Column(DateTime, nullable=False)
     
     # Relaciones
     funcion = relationship("Funcion", back_populates="reservas")
