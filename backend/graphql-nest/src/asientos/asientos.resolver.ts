@@ -3,21 +3,21 @@ import { AsientosService } from './asientos.service';
 import { Asiento } from './entities/asiento.entity';
 import { CreateAsientoInput } from './dto/create-asiento.input';
 import { UpdateAsientoInput } from './dto/update-asiento.input';
-import { HttpService } from 'src/http/http.service';
+import { HttpServices } from 'src/http/http.service';
 
 @Resolver(() => Asiento)
 export class AsientosResolver {
   constructor(
-    private readonly asientosService: AsientosService) {}
+    private httpServices: HttpServices) {}
 
 
   @Query(() => [Asiento], { name: 'asientos' })
   findAll() {
-    return this.asientosService.findAll();
+    return this.httpServices.findAllAsientos();
   }
 
   @Query(() => Asiento, { name: 'asiento' })
-  findOne(@Args('id', { type: () => Int }) id: number) {
-    return this.asientosService.findOne(id);
+  findOne(@Args('id', { type: () => String }) id: string) {
+    return this.httpServices.findOneAsiento(id);
   }
 }

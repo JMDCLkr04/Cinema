@@ -7,6 +7,7 @@ class PeliculaBase(BaseModel):
     genero: Optional[str] = Field(None, max_length=100)
     descripcion: Optional[str] = None
     clasificacion: Optional[str] = Field(None, max_length=50)
+    duracion_minutos: Optional[int] = Field(None, gt=0)
 
 class PeliculaCreate(PeliculaBase):
     pass
@@ -16,6 +17,7 @@ class PeliculaUpdate(BaseModel):
     genero: Optional[str] = Field(None, max_length=100)
     descripcion: Optional[str] = None
     clasificacion: Optional[str] = Field(None, max_length=50)
+    duracion_minutos: Optional[int] = Field(None, gt=0)
 
 class PeliculaResponse(PeliculaBase):
     id_pelicula: UUID
