@@ -1,7 +1,16 @@
-import { ObjectType, Field, Int } from '@nestjs/graphql';
+import { ObjectType, Field, Int, Float } from '@nestjs/graphql';
 
 @ObjectType()
 export class Factura {
-  @Field(() => Int, { description: 'Example field (placeholder)' })
-  exampleField: number;
+  @Field(() => String)
+  id_factura: string;
+
+  @Field(() => String)
+  fecha_emision: string;
+
+  @Field(() => Float)
+  total: number;
+
+  @Field(() => String)
+  metodo_pago: string;
 }

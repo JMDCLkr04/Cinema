@@ -3,8 +3,11 @@ import { ObjectType, Field, Int, ID } from '@nestjs/graphql';
 @ObjectType()
 export class Asiento {
   @Field(() => String)
-  id: string;
+  id_asiento: string;
 
-  @Field(() => Boolean)
-  exampleField: boolean;
+  @Field(() => Int)
+  numero: number;
+
+  @Field(() => String)
+  estado: string;
 }

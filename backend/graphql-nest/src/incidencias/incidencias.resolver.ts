@@ -1,35 +1,29 @@
-import { Resolver, Query, Mutation, Args, Int } from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args, Int, Parent, ResolveField } from '@nestjs/graphql';
 import { IncidenciasService } from './incidencias.service';
 import { Incidencia } from './entities/incidencia.entity';
 import { CreateIncidenciaInput } from './dto/create-incidencia.input';
 import { UpdateIncidenciaInput } from './dto/update-incidencia.input';
+import { HttpServices } from 'src/http/http.service';
+import { Usuario } from 'src/usuarios/entities/usuario.entity';
 
 @Resolver(() => Incidencia)
 export class IncidenciasResolver {
-  constructor(private readonly incidenciasService: IncidenciasService) {}
+  constructor(private httpServices: HttpServices) {}
 
-  @Mutation(() => Incidencia)
-  createIncidencia(@Args('createIncidenciaInput') createIncidenciaInput: CreateIncidenciaInput) {
-    return this.incidenciasService.create(createIncidenciaInput);
-  }
 
   @Query(() => [Incidencia], { name: 'incidencias' })
   findAll() {
-    return this.incidenciasService.findAll();
+    return this.httpServices.findAllIncidencias();
   }
 
   @Query(() => Incidencia, { name: 'incidencia' })
-  findOne(@Args('id', { type: () => Int }) id: number) {
-    return this.incidenciasService.findOne(id);
+  findOne(@Args('id', { type: () => Int }) id: string) {
+    return this.httpServices.findOneIncidencia(id);
   }
 
-  @Mutation(() => Incidencia)
-  updateIncidencia(@Args('updateIncidenciaInput') updateIncidenciaInput: UpdateIncidenciaInput) {
-    return this.incidenciasService.update(updateIncidenciaInput.id, updateIncidenciaInput);
-  }
-
-  @Mutation(() => Incidencia)
-  removeIncidencia(@Args('id', { type: () => Int }) id: number) {
-    return this.incidenciasService.remove(id);
+  @ResolveField(() => [Usuario])
+  async usuarios(@Parent() incidencia: Incidencia) {
+    const usuariosPorIncidencia = await this.httpServices.findAllUsers();
+    return usuariosPorIncidencia.filter(u => u.id_usuario === incidencia.id_incidencia);
   }
 }

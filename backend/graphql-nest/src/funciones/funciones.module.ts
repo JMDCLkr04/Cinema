@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { FuncionesService } from './funciones.service';
 import { FuncionesResolver } from './funciones.resolver';
-import { HttpService } from '@nestjs/axios';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
-  imports: [HttpService],
+  imports: [HttpModule],
   providers: [FuncionesResolver, FuncionesService],
 })
 export class FuncionesModule {}

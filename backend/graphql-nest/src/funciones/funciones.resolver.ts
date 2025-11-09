@@ -34,10 +34,10 @@ export class FuncionesResolver {
     return peliculasPorFuncion.filter(p=>p.id_pelicula === pelicula.id_pelicula)
   }
 
-  @ResolveField(() => [Reserva])
-  async reserva(@Parent() reserva: Reserva){
-    const reservasPorFuncion = await this.httpServices.findAllReservas();
-    return reservasPorFuncion.filter(r=>r.reserva_id === reserva.reserva_id)
-  }
+  // @ResolveField(() => [Reserva])
+  // async reserva(@Parent() reserva: Reserva){
+  //   const reservasPorFuncion = await this.httpServices.findAllReservas();
+  //   return reservasPorFuncion.filter(r=>r.reserva_id === reserva.reserva_id)
+  // }
 
 }

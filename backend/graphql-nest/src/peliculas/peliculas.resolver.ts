@@ -1,35 +1,29 @@
-import { Resolver, Query, Mutation, Args, Int } from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args, Int, ResolveField, Parent } from '@nestjs/graphql';
 import { PeliculasService } from './peliculas.service';
 import { Pelicula } from './entities/pelicula.entity';
 import { CreatePeliculaInput } from './dto/create-pelicula.input';
 import { UpdatePeliculaInput } from './dto/update-pelicula.input';
+import { HttpServices } from 'src/http/http.service';
+import { Funcione } from 'src/funciones/entities/funcione.entity';
 
 @Resolver(() => Pelicula)
 export class PeliculasResolver {
-  constructor(private readonly peliculasService: PeliculasService) {}
-
-  @Mutation(() => Pelicula)
-  createPelicula(@Args('createPeliculaInput') createPeliculaInput: CreatePeliculaInput) {
-    return this.peliculasService.create(createPeliculaInput);
-  }
+  constructor(private httpServices:HttpServices) {}
 
   @Query(() => [Pelicula], { name: 'peliculas' })
   findAll() {
-    return this.peliculasService.findAll();
+    return this.httpServices.findAllPeliculas();
   }
 
   @Query(() => Pelicula, { name: 'pelicula' })
-  findOne(@Args('id', { type: () => Int }) id: number) {
-    return this.peliculasService.findOne(id);
+  findOne(@Args('id', { type: () => String }) id: string) {
+    return this.httpServices.findOnePelicula(id);
   }
 
-  @Mutation(() => Pelicula)
-  updatePelicula(@Args('updatePeliculaInput') updatePeliculaInput: UpdatePeliculaInput) {
-    return this.peliculasService.update(updatePeliculaInput.id, updatePeliculaInput);
+  @ResolveField(() => [Funcione])
+  async funciones(@Parent() pelicula: Pelicula) {
+    const funcionesPorPelicula = await this.httpServices.findAllFunciones();
+    return funcionesPorPelicula.filter(f => f.peliculas.some(p => p.id_pelicula === pelicula.id_pelicula));
   }
 
-  @Mutation(() => Pelicula)
-  removePelicula(@Args('id', { type: () => Int }) id: number) {
-    return this.peliculasService.remove(id);
-  }
 }

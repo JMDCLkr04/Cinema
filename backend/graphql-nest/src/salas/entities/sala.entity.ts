@@ -1,4 +1,5 @@
 import { ObjectType, Field, Int } from '@nestjs/graphql';
+import { Asiento } from 'src/asientos/entities/asiento.entity';
 
 @ObjectType()
 export class Sala {
@@ -16,4 +17,13 @@ export class Sala {
 
   @Field(() => String)
   estado: string;
+
+  @Field(() => Int)
+  filas: number;
+
+  @Field(() => Int)
+  columnas: number;
+
+  @Field(() => [Asiento])
+  asientos: Asiento[];
 }
