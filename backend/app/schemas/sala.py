@@ -8,6 +8,8 @@ class SalaBase(BaseModel):
     capacidad: Optional[Decimal] = Field(None, ge=0)
     tipo: Optional[str] = Field(None, max_length=100)
     estado: Optional[str] = Field(None, max_length=50)
+    filas: Optional[Decimal] = Field(None, ge=0)
+    columnas: Optional[Decimal] = Field(None, ge=0)
 
 class SalaCreate(SalaBase):
     pass
@@ -17,6 +19,8 @@ class SalaUpdate(BaseModel):
     capacidad: Optional[Decimal] = Field(None, ge=0)
     tipo: Optional[str] = Field(None, max_length=100)
     estado: Optional[str] = Field(None, max_length=50)
+    filas: Optional[int] = Field(None, ge=0)
+    columnas: Optional[int] = Field(None, ge=0)
 
 class SalaResponse(SalaBase):
     id_sala: UUID
