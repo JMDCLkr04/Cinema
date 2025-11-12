@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { PeliculasService } from './peliculas.service';
 import { PeliculasResolver } from './peliculas.resolver';
-import { HttpService } from '@nestjs/axios';
+import { HttpModule } from 'src/http/http.module';
 
 @Module({
-  imports: [HttpService],
+  imports: [HttpModule],
   providers: [PeliculasResolver, PeliculasService],
 })
 export class PeliculasModule {}

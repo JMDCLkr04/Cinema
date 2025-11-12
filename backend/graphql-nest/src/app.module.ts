@@ -13,7 +13,7 @@ import { ReservasModule } from './reservas/reservas.module';
 import { ReservaAsientoModule } from './reserva-asiento/reserva-asiento.module';
 import { FacturasModule } from './facturas/facturas.module';
 import { IncidenciasModule } from './incidencias/incidencias.module';
-import { HttpModule } from '@nestjs/axios';
+import { HttpModule } from 'src/http/http.module';
 
 @Module({
   imports: [
@@ -22,6 +22,7 @@ import { HttpModule } from '@nestjs/axios';
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
 
     }),
+  HttpModule,
     AsientosModule,
     UsuariosModule,
     PeliculasModule,
@@ -31,7 +32,8 @@ import { HttpModule } from '@nestjs/axios';
     ReservaAsientoModule,
     FacturasModule,
     IncidenciasModule,
-    HttpModule,
   ],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}

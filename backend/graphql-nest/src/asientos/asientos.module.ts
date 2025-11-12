@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AsientosService } from './asientos.service';
 import { AsientosResolver } from './asientos.resolver';
-import { HttpModule } from '@nestjs/axios';
+import { HttpModule } from 'src/http/http.module';
 
 @Module({
   imports: [HttpModule],

@@ -1,35 +1,27 @@
-import { Resolver, Query, Mutation, Args, Int } from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args, Int, Parent, ResolveField } from '@nestjs/graphql';
 import { UsuariosService } from './usuarios.service';
 import { Usuario } from './entities/usuario.entity';
 import { CreateUsuarioInput } from './dto/create-usuario.input';
 import { UpdateUsuarioInput } from './dto/update-usuario.input';
+import { Incidencia } from 'src/incidencias/entities/incidencia.entity';
+import { HttpServices } from 'src/http/http.service';
 
 @Resolver(() => Usuario)
 export class UsuariosResolver {
-  constructor(private readonly usuariosService: UsuariosService) {}
-
-  @Mutation(() => Usuario)
-  createUsuario(@Args('createUsuarioInput') createUsuarioInput: CreateUsuarioInput) {
-    return this.usuariosService.create(createUsuarioInput);
-  }
-
+  constructor(private httpServices:HttpServices) {}
   @Query(() => [Usuario], { name: 'usuarios' })
-  findAll() {
-    return this.usuariosService.findAll();
-  }
+    findAll() {
+      return this.httpServices.findAllUsers();
+    }
 
-  @Query(() => Usuario, { name: 'usuario' })
-  findOne(@Args('id', { type: () => Int }) id: number) {
-    return this.usuariosService.findOne(id);
-  }
+    @Query(() => Usuario, { name: 'usuario' })
+    findOne(@Args('id', { type: () => Int }) id: string) {
+      return this.httpServices.findOneUser(id);
+    }
 
-  @Mutation(() => Usuario)
-  updateUsuario(@Args('updateUsuarioInput') updateUsuarioInput: UpdateUsuarioInput) {
-    return this.usuariosService.update(updateUsuarioInput.id, updateUsuarioInput);
-  }
-
-  @Mutation(() => Usuario)
-  removeUsuario(@Args('id', { type: () => Int }) id: number) {
-    return this.usuariosService.remove(id);
-  }
+    @ResolveField(() => [Usuario])
+    async usuarios(@Parent() incidencia: Incidencia) {
+      const usuariosPorIncidencia = await this.httpServices.findAllUsers();
+      return usuariosPorIncidencia.filter(u => u.id_usuario === incidencia.id_incidencia);
+    }
 }

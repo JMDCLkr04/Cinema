@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { IncidenciasService } from './incidencias.service';
 import { IncidenciasResolver } from './incidencias.resolver';
-import { HttpModule } from '@nestjs/axios';
+import { HttpModule } from 'src/http/http.module';
 
 @Module({
   imports: [HttpModule],
