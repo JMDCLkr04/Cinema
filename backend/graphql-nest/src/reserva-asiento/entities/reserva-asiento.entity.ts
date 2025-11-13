@@ -1,7 +1,10 @@
-import { ObjectType, Field, Int } from '@nestjs/graphql';
+import { ObjectType, Field, ID } from '@nestjs/graphql';
 
 @ObjectType()
 export class ReservaAsiento {
-  @Field(() => Int, { description: 'Example field (placeholder)' })
-  exampleField: number;
+  @Field(() => String, { description: 'ID de la reserva asociada' })
+  id_reserva: string;
+
+  @Field(() => String, { description: 'ID del asiento' })
+  id_asiento: string;
 }
