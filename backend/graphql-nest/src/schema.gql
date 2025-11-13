@@ -42,7 +42,6 @@ type Pelicula {
   descripcion: String
   clasificacion: String
   duracion: String
-  funciones: [Funcione!]!
 }
 
 type Reserva {
@@ -98,26 +97,12 @@ type Query {
 }
 
 type Mutation {
-  createSala(createSalaInput: CreateSalaInput!): Sala!
-  updateSala(updateSalaInput: UpdateSalaInput!): Sala!
-  removeSala(id: Int!): Sala!
   createReserva(createReservaInput: CreateReservaInput!): Reserva!
   updateReserva(updateReservaInput: UpdateReservaInput!): Reserva!
   removeReserva(id: Int!): Reserva!
   createReservaAsiento(createReservaAsientoInput: CreateReservaAsientoInput!): ReservaAsiento!
   updateReservaAsiento(updateReservaAsientoInput: UpdateReservaAsientoInput!): ReservaAsiento!
   removeReservaAsiento(id: Int!): ReservaAsiento!
-}
-
-input CreateSalaInput {
-  """Example field (placeholder)"""
-  exampleField: Int!
-}
-
-input UpdateSalaInput {
-  """Example field (placeholder)"""
-  exampleField: Int
-  id: Int!
 }
 
 input CreateReservaInput {

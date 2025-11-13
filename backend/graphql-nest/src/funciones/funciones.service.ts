@@ -1,26 +1,60 @@
-import { Injectable } from '@nestjs/common';
-import { CreateFuncioneInput } from './dto/create-funcione.input';
-import { UpdateFuncioneInput } from './dto/update-funcione.input';
+import { Injectable, Logger } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
+import { Funcione } from './entities/funcione.entity';
+import { Pelicula } from '../peliculas/entities/pelicula.entity';
 
 @Injectable()
 export class FuncionesService {
-  create(createFuncioneInput: CreateFuncioneInput) {
-    return 'This action adds a new funcione';
+  private readonly logger = new Logger(FuncionesService.name);
+  private readonly API_BASE_URL = 'http://localhost:8000/api/v1';
+
+  constructor(private readonly httpService: HttpService) {}
+
+  private async handleRequest<T>(endpoint: string): Promise<T> {
+    const url = `${this.API_BASE_URL}${endpoint}`;
+    this.logger.debug(`Realizando petición GET a: ${url}`);
+    
+    try {
+      const response = await firstValueFrom(
+        this.httpService.request<T>({
+          method: 'GET',
+          url: endpoint,
+          baseURL: this.API_BASE_URL,
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        })
+      );
+      return response.data;
+    } catch (error) {
+      this.logger.error(`Error al realizar la petición a ${url}:`, error);
+      throw error;
+    }
   }
 
-  findAll() {
-    return `This action returns all funciones`;
+  async findAll(): Promise<Funcione[]> {
+    const funciones = await this.handleRequest<any[]>('/funciones');
+    return funciones.map(funcion => ({
+      id_funcion: funcion.id_funcion,
+      fecha_hora: funcion.fecha_hora || new Date().toISOString(),
+      precio: parseFloat(funcion.precio) || 0,
+      peliculas: (funcion.peliculas || []) as Pelicula[],
+      salas: funcion.salas || [],
+      reservas: funcion.reservas || []
+    }));
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} funcione`;
-  }
-
-  update(id: number, updateFuncioneInput: UpdateFuncioneInput) {
-    return `This action updates a #${id} funcione`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} funcione`;
+  async findOne(id: string): Promise<Funcione> {
+    const funcion = await this.handleRequest<any>(`/funciones/${id}`);
+    return {
+      id_funcion: funcion.id_funcion,
+      fecha_hora: funcion.fecha_hora || new Date().toISOString(),
+      precio: parseFloat(funcion.precio) || 0,
+      peliculas: (funcion.peliculas || []) as Pelicula[],
+      salas: funcion.salas || [],
+      reservas: funcion.reservas || []
+    };
   }
 }
