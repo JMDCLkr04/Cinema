@@ -1,5 +1,7 @@
 "use client"
 
+"use client"
+
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Header } from "@/components/layout/header"
@@ -9,40 +11,55 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { Movie, Funcion } from "@/lib/types"
+import { movieService } from "@/lib/api"
+import { useAuth } from "@/contexts/auth-context"
 import Image from "next/image"
-import { Clock, Calendar, ArrowLeft } from "lucide-react"
+import { Clock, Calendar, ArrowLeft, AlertCircle } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 export default function MovieDetailPage() {
   const params = useParams()
   const router = useRouter()
+  const { token } = useAuth()
   const [movie, setMovie] = useState<Movie | null>(null)
   const [funciones, setFunciones] = useState<Funcion[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [selectedDate, setSelectedDate] = useState<string>("")
   const [selectedFuncion, setSelectedFuncion] = useState<string>("")
 
   useEffect(() => {
+    if (!params.id || !token) return
+    
     const fetchMovieDetails = async () => {
       try {
-        const response = await fetch(`/api/movies/${params.id}`)
-        const data = await response.json()
-        setMovie(data.movie)
-        setFunciones(data.funciones)
-
-        // Set default date to first available
-        if (data.funciones.length > 0) {
-          const uniqueDates = Array.from(new Set(data.funciones.map((f: Funcion) => f.fecha)))
+        setIsLoading(true)
+        const movieData = await movieService.getById(params.id as string, token)
+        console.log(movieData)
+        
+        if (!movieData) {
+          throw new Error("No se pudo cargar la información de la película")
+        }
+        
+        setMovie(movieData)
+        
+        if (movieData.funciones && movieData.funciones.length > 0) {
+          setFunciones(movieData.funciones)
+          const uniqueDates = Array.from(new Set(movieData.funciones.map((f: Funcion) => f.fecha)))
           setSelectedDate(uniqueDates[0] as string)
         }
-      } catch (error) {
-        console.error("Error fetching movie details:", error)
+        
+        setError(null)
+      } catch (err) {
+        console.error("Error fetching movie details:", err)
+        setError("No se pudo cargar la información de la película. Intente de nuevo más tarde.")
       } finally {
         setIsLoading(false)
       }
     }
 
     fetchMovieDetails()
-  }, [params.id])
+  }, [params.id, token])
 
   const availableDates = Array.from(new Set(funciones.map((f) => f.fecha))).sort()
   const funcionesForDate = funciones.filter((f) => f.fecha === selectedDate)
@@ -55,20 +72,33 @@ export default function MovieDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      <div className="flex min-h-screen flex-col bg-background">
+        <Header />
+        <main className="flex flex-1 items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        </main>
+        <Footer />
       </div>
     )
   }
 
-  if (!movie) {
+  if (error || !movie) {
     return (
       <div className="flex min-h-screen flex-col bg-background">
         <Header />
-        <main className="flex flex-1 items-center justify-center">
-          <div className="text-center">
-            <h1 className="mb-4 text-2xl font-bold text-foreground">Película no encontrada</h1>
-            <Button onClick={() => router.push("/")}>Volver a la cartelera</Button>
+        <main className="container flex flex-1 items-center justify-center py-12">
+          <div className="w-full max-w-md space-y-4 text-center">
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>
+                {error || 'No se pudo cargar la información de la película.'}
+              </AlertDescription>
+            </Alert>
+            <Button onClick={() => router.push("/")}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Volver a la cartelera
+            </Button>
           </div>
         </main>
         <Footer />
@@ -124,7 +154,7 @@ export default function MovieDetailPage() {
               {/* Left Column - Movie Info */}
               <div className="lg:col-span-2">
                 <h2 className="mb-4 text-2xl font-bold text-foreground">Sinopsis</h2>
-                <p className="text-pretty text-lg leading-relaxed text-muted-foreground">{movie.sinopsis}</p>
+                <p className="text-pretty text-lg leading-relaxed text-muted-foreground">{movie.descripcion}</p>
               </div>
 
               {/* Right Column - Booking */}

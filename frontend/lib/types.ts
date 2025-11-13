@@ -10,7 +10,7 @@ export interface User {
 export interface Movie {
   id_pelicula: string
   titulo: string
-  sinopsis: string
+  descripcion: string
   genero: string
   clasificacion: string
   duracion: number

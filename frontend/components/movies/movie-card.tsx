@@ -41,7 +41,7 @@ export function MovieCard({ movie }: MovieCardProps) {
 
       <CardContent className="p-4">
         <h3 className="text-balance text-lg font-semibold text-foreground line-clamp-2">{movie.titulo}</h3>
-        <p className="mt-1 text-pretty text-sm text-muted-foreground line-clamp-2">{movie.sinopsis}</p>
+        <p className="mt-1 text-pretty text-sm text-muted-foreground line-clamp-2">{movie.descripcion}</p>
       </CardContent>
     </Card>
   )
