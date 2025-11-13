@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import type { User } from "@/lib/types"
+import { authService } from "@/lib/api"
 
 interface AuthContextType {
   user: User | null
@@ -9,20 +10,23 @@ interface AuthContextType {
   register: (email: string, password: string, nombre: string) => Promise<void>
   logout: () => void
   isLoading: boolean
+  token: string | null
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
+  const [token, setToken] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Check for stored token on mount
-    const token = localStorage.getItem("token")
+    // Verificar si hay un token almacenado al cargar
+    const storedToken = localStorage.getItem("token")
     const storedUser = localStorage.getItem("user")
 
-    if (token && storedUser) {
+    if (storedToken && storedUser) {
+      setToken(storedToken)
       setUser(JSON.parse(storedUser))
     }
     setIsLoading(false)
@@ -30,64 +34,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
-      // TODO: Replace with actual API call
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      })
-
-      if (!response.ok) {
-        throw new Error("Credenciales inválidas")
-      }
-
-      const data = await response.json()
-
-      localStorage.setItem("token", data.token)
-      localStorage.setItem("user", JSON.stringify(data.user))
-      setUser(data.user)
+      const { token, user } = await authService.login(email, password)
+      
+      // Almacenar token y usuario
+      localStorage.setItem("token", token)
+      localStorage.setItem("user", JSON.stringify(user))
+      
+      // Actualizar estado
+      setToken(token)
+      setUser(user)
     } catch (error) {
+      console.error("Login error:", error)
       throw error
     }
   }
 
   const register = async (email: string, password: string, nombre: string) => {
     try {
-      // TODO: Replace with actual API call
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, nombre, rol: "cliente" }),
-      })
-
-      if (!response.ok) {
-        throw new Error("Error al registrar usuario")
-      }
-
-      const data = await response.json()
-
-      // Auto-login after registration
-      localStorage.setItem("token", data.token)
-      localStorage.setItem("user", JSON.stringify(data.user))
-      setUser(data.user)
+      // Primero registramos al usuario
+      await authService.register({ email, password, nombre })
+      
+      // Luego iniciamos sesión automáticamente
+      await login(email, password)
     } catch (error) {
+      console.error("Register error:", error)
       throw error
     }
   }
 
   const logout = () => {
+    // Limpiar almacenamiento local
     localStorage.removeItem("token")
     localStorage.removeItem("user")
+    
+    // Restablecer estado
+    setToken(null)
     setUser(null)
   }
 
-  return <AuthContext.Provider value={{ user, login, register, logout, isLoading }}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={{ user, login, register, logout, isLoading, token }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
-export function useAuth() {
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext)
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider")
+    throw new Error("useAuth debe usarse dentro de un AuthProvider")
   }
   return context
 }
