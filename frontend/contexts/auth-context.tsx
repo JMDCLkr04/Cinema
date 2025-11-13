@@ -36,13 +36,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const { token, user } = await authService.login(email, password)
       
-      // Almacenar token y usuario
+      // Almacenar token
       localStorage.setItem("token", token)
-      localStorage.setItem("user", JSON.stringify(user))
       
-      // Actualizar estado
+      // Create user data object with the correct structure
+      const userData: User = {
+        id_usuario: (user as any).id_usuario || (user as any).id || '',
+        correo: (user as any).correo || email,
+        nombre: (user as any).nombre || '',
+        rol: (user as any).rol || 'cliente',
+        email: email // For backward compatibility
+      };
+      
+      localStorage.setItem("user", JSON.stringify(userData))
+      
+      // Update state
       setToken(token)
-      setUser(user)
+      setUser(userData)
     } catch (error) {
       console.error("Login error:", error)
       throw error
@@ -51,14 +61,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = async (email: string, password: string, nombre: string) => {
     try {
-      // Primero registramos al usuario
-      await authService.register({ email, password, nombre })
+      console.log("Registering user:", { email, nombre });
       
-      // Luego iniciamos sesión automáticamente
-      await login(email, password)
+      // Register the user with only the required fields
+      const response = await authService.register({ 
+        correo: email, 
+        password, 
+        nombre
+      });
+      
+      console.log("Registration successful, logging in...");
+      
+      // Then log in automatically
+      await login(email, password);
     } catch (error) {
-      console.error("Register error:", error)
-      throw error
+      console.error("Register error:", error);
+      throw error;
     }
   }
 
