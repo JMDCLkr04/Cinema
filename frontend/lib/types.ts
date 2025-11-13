@@ -1,8 +1,10 @@
 export interface User {
   id_usuario: string
-  email: string
+  correo: string  // Changed from email to correo to match backend
   nombre: string
   rol: "cliente" | "admin"
+  // Make email optional for backward compatibility
+  email?: string
 }
 
 export interface Movie {
