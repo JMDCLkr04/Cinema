@@ -36,12 +36,12 @@ type Incidencia {
 }
 
 type Pelicula {
-  id_pelicula: String
-  titulo: String
+  id_pelicula: String!
+  titulo: String!
   genero: String
   descripcion: String
-  calificacion: Int
-  duracion: Int
+  clasificacion: String
+  duracion: String
   funciones: [Funcione!]!
 }
 

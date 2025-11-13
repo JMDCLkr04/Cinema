@@ -2,10 +2,10 @@ import { ObjectType, Field, Int } from '@nestjs/graphql';
 
 @ObjectType()
 export class Pelicula {
-  @Field(() => String, { nullable: true })
+  @Field(() => String )
   id_pelicula?: string;
 
-  @Field(() => String, { nullable: true })
+  @Field(() => String )
   titulo?: string;
 
   @Field(() => String, { nullable: true })
@@ -14,9 +14,9 @@ export class Pelicula {
   @Field(() => String, { nullable: true })
   descripcion?: string;
 
-  @Field(() => Int, { nullable: true })
-  calificacion?: number;
+  @Field(() => String, { nullable: true })
+  clasificacion?: string;
 
-  @Field(() => Int, { nullable: true })
-  duracion?: number;
+  @Field(() => String, { nullable: true })
+  duracion?: string;
 }

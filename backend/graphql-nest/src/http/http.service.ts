@@ -67,24 +67,24 @@ export class HttpServices {
   async findAllPeliculas(): Promise<Pelicula[]> {
     const peliculas = await this.handleRequest<any[]>('/peliculas');
     return peliculas.map(pelicula => ({
-      id_pelicula: pelicula.id_pelicula || pelicula.id,
-      titulo: pelicula.titulo || pelicula.title,
-      genero: pelicula.genero || pelicula.genre,
-      descripcion: pelicula.descripcion || pelicula.description,
-      calificacion: pelicula.calificacion || pelicula.rating,
-      duracion: pelicula.duracion || pelicula.duration
+      id_pelicula: pelicula.id_pelicula,
+      titulo: pelicula.titulo,
+      genero: pelicula.genero,
+      descripcion: pelicula.descripcion,
+      clasificacion: pelicula.clasificacion,
+      duracion: pelicula.duracion
     }));
   }
 
   async findOnePelicula(id: string): Promise<Pelicula> {
     const pelicula = await this.handleRequest<any>(`/peliculas/${id}`);
     return {
-      id_pelicula: pelicula.id_pelicula || pelicula.id,
-      titulo: pelicula.titulo || pelicula.title,
-      genero: pelicula.genero || pelicula.genre,
-      descripcion: pelicula.descripcion || pelicula.description,
-      calificacion: pelicula.calificacion || pelicula.rating,
-      duracion: pelicula.duracion || pelicula.duration
+      id_pelicula: pelicula.id_pelicula,
+      titulo: pelicula.titulo,
+      genero: pelicula.genero,
+      descripcion: pelicula.descripcion,
+      clasificacion: pelicula.clasificacion,
+      duracion: pelicula.duracion 
     };
   }
   async findAllSalas(): Promise<Sala[]> {
