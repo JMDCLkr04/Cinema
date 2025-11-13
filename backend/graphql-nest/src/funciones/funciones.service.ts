@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
-import { Funcione } from './entities/funcione.entity';
+import { Funciones } from './entities/funcione.entity';
 import { Pelicula } from '../peliculas/entities/pelicula.entity';
 
 @Injectable()
@@ -34,7 +34,7 @@ export class FuncionesService {
     }
   }
 
-  async findAll(): Promise<Funcione[]> {
+  async findAll(): Promise<Funciones[]> {
     const funciones = await this.handleRequest<any[]>('/funciones');
     return funciones.map(funcion => ({
       id_funcion: funcion.id_funcion,
@@ -42,11 +42,10 @@ export class FuncionesService {
       precio: parseFloat(funcion.precio) || 0,
       peliculas: (funcion.peliculas || []) as Pelicula[],
       salas: funcion.salas || [],
-      reservas: funcion.reservas || []
     }));
   }
 
-  async findOne(id: string): Promise<Funcione> {
+  async findOne(id: string): Promise<Funciones> {
     const funcion = await this.handleRequest<any>(`/funciones/${id}`);
     return {
       id_funcion: funcion.id_funcion,
@@ -54,7 +53,6 @@ export class FuncionesService {
       precio: parseFloat(funcion.precio) || 0,
       peliculas: (funcion.peliculas || []) as Pelicula[],
       salas: funcion.salas || [],
-      reservas: funcion.reservas || []
     };
   }
 }

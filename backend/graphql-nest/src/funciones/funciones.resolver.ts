@@ -1,43 +1,29 @@
-import { Resolver, Query, Mutation, Args, Int, Parent, ResolveField } from '@nestjs/graphql';
+import { Resolver, Query, Args } from '@nestjs/graphql';
 import { FuncionesService } from './funciones.service';
-import { Funcione } from './entities/funcione.entity';
-import { CreateFuncioneInput } from './dto/create-funcione.input';
-import { UpdateFuncioneInput } from './dto/update-funcione.input';
-import { HttpServices } from 'src/http/http.service';
-import { Pelicula } from 'src/peliculas/entities/pelicula.entity';
-import { Sala } from 'src/salas/entities/sala.entity';
-import { Reserva } from 'src/reservas/entities/reserva.entity';
+import { Funciones } from './entities/funcione.entity';
 
-@Resolver(() => Funcione)
+@Resolver(() => Funciones)
 export class FuncionesResolver {
-  constructor(private httpServices: HttpServices) {}
+  constructor(private readonly funcionesService: FuncionesService) {}
 
-  @Query(() => [Funcione], { name: 'funciones' })
-  findAll() {
-    return this.httpServices.findAllFunciones();
+  @Query(() => [Funciones], { name: 'funciones' })
+  async findAll() {
+    try {
+      return await this.funcionesService.findAll();
+    } catch (error) {
+      console.error('Error en FuncionesResolver.findAll:', error);
+      throw error;
+    }
   }
 
-  @Query(() => Funcione, { name: 'funcione' })
-  findOne(@Args('id', { type: () => String }) id: string) {
-    return this.httpServices.findOneFuncion(id);
+  @Query(() => Funciones, { name: 'funcion' })
+  async findOne(@Args('id', { type: () => String }) id: string) {
+    try {
+      return await this.funcionesService.findOne(id);
+    } catch (error) {
+      console.error(`Error en FuncionesResolver.findOne(${id}):`, error);
+      throw error;
+    }
   }
-
-  @ResolveField(() => [Sala])
-  async sala(@Parent() sala: Sala){
-    const salasPorFuncion = await this.httpServices.findAllSalas();
-    return salasPorFuncion.filter(s=>s.id_sala === sala.id_sala)
-  }
-
-  @ResolveField(() => [Pelicula])
-  async pelicula(@Parent() pelicula: Pelicula){
-    const peliculasPorFuncion = await this.httpServices.findAllPeliculas();
-    return peliculasPorFuncion.filter(p=>p.id_pelicula === pelicula.id_pelicula)
-  }
-
-  // @ResolveField(() => [Reserva])
-  // async reserva(@Parent() reserva: Reserva){
-  //   const reservasPorFuncion = await this.httpServices.findAllReservas();
-  //   return reservasPorFuncion.filter(r=>r.reserva_id === reserva.reserva_id)
-  // }
 
 }

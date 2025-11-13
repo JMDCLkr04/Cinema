@@ -9,7 +9,7 @@ import { Reserva } from 'src/reservas/entities/reserva.entity';
 import { ReservaAsiento } from 'src/reserva-asiento/entities/reserva-asiento.entity';
 import { Incidencia } from 'src/incidencias/entities/incidencia.entity';
 import { Factura } from 'src/facturas/entities/factura.entity';
-import { Funcione } from 'src/funciones/entities/funcione.entity';
+import { Funciones } from 'src/funciones/entities/funcione.entity';
 import { Usuario } from 'src/usuarios/entities/usuario.entity';
 
 const API_BASE_URL = 'http://localhost:8000/api/v1';
@@ -124,10 +124,10 @@ export class HttpServices {
     return this.handleRequest<Factura>(`/facturas/${id}`);
   }
   // Funciones
-  async findAllFunciones(): Promise<Funcione[]> {
-    return this.handleRequest<Funcione[]>('/funciones');
+  async findAllFunciones(): Promise<Funciones[]> {
+    return this.handleRequest<Funciones[]>('/funciones');
   }
-  async findOneFuncion(id: string): Promise<Funcione> {
-    return this.handleRequest<Funcione>(`/funciones/${id}`);
+  async findOneFuncion(id: string): Promise<Funciones> {
+    return this.handleRequest<Funciones>(`/funciones/${id}`);
   }
 }
