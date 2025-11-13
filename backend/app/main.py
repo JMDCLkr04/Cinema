@@ -9,6 +9,7 @@ from app.routes import (
     funciones,
     asientos,
     reservas,
+    reserva_asiento,
     facturas,
     incidencias
 )
@@ -40,6 +41,7 @@ app.include_router(salas.router, prefix=settings.API_V1_PREFIX, tags=["Salas"])
 app.include_router(funciones.router, prefix=settings.API_V1_PREFIX, tags=["Funciones"])
 app.include_router(asientos.router, prefix=settings.API_V1_PREFIX, tags=["Asientos"])
 app.include_router(reservas.router, prefix=settings.API_V1_PREFIX, tags=["Reservas"])
+app.include_router(reserva_asiento.router, prefix=settings.API_V1_PREFIX, tags=["Reservas - Asientos"])
 app.include_router(facturas.router, prefix=settings.API_V1_PREFIX, tags=["Facturas"])
 app.include_router(incidencias.router, prefix=settings.API_V1_PREFIX, tags=["Incidencias"])
 
