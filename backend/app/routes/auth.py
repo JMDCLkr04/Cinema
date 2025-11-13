@@ -17,28 +17,47 @@ router = APIRouter()
 @router.post("/auth/register", response_model=UsuarioResponse, status_code=status.HTTP_201_CREATED)
 def register(usuario: UsuarioCreate, db: Session = Depends(get_db)):
     """Registrar un nuevo usuario"""
-    # Verificar si el correo ya existe
-    db_usuario = db.query(Usuario).filter(Usuario.correo == usuario.correo).first()
-    if db_usuario:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="El correo ya está registrado"
+    try:
+        print(f"Registering user with email: {usuario.correo}")
+        
+        # Verificar si el correo ya existe
+        db_usuario = db.query(Usuario).filter(Usuario.correo == usuario.correo).first()
+        if db_usuario:
+            print(f"Email {usuario.correo} already exists")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="El correo ya está registrado"
+            )
+        
+        # Crear nuevo usuario con password hasheado
+        print("Hashing password...")
+        hashed_password = get_password_hash(usuario.password)
+        
+        print("Creating user object...")
+        db_usuario = Usuario(
+            nombre=usuario.nombre,
+            correo=usuario.correo,
+            password=hashed_password,
+            rol=usuario.rol or "cliente"
         )
-    
-    # Crear nuevo usuario con password hasheado
-    hashed_password = get_password_hash(usuario.password)
-    db_usuario = Usuario(
-        nombre=usuario.nombre,
-        correo=usuario.correo,
-        password=hashed_password,
-        rol=usuario.rol or "cliente"
-    )
-    
-    db.add(db_usuario)
-    db.commit()
-    db.refresh(db_usuario)
-    
-    return db_usuario
+        
+        print("Adding user to database...")
+        db.add(db_usuario)
+        db.commit()
+        db.refresh(db_usuario)
+        
+        print(f"User created successfully with ID: {db_usuario.id_usuario}")
+        return db_usuario
+        
+    except HTTPException as he:
+        # Re-raise HTTP exceptions
+        raise he
+    except Exception as e:
+        print(f"Error during registration: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al registrar el usuario: {str(e)}"
+        )
 
 @router.post("/auth/login", response_model=Token)
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
