@@ -1,0 +1,143 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type Asiento {
+  id_asiento: String!
+  numero: Int!
+  estado: String!
+  sala: [Sala!]!
+}
+
+type Sala {
+  id_sala: String!
+  nombre: String!
+  capacidad: Int!
+  tipo: String!
+  estado: String!
+  filas: Int!
+  columnas: Int!
+  asientos: [Asiento!]!
+}
+
+type Usuario {
+  id_usuario: String!
+  nombre: String!
+  correo: String!
+  password: String!
+  rol: String!
+  usuarios: [Usuario!]!
+}
+
+type Incidencia {
+  id_incidencia: String!
+  fecha_generacion: String!
+  usuarios: [Usuario!]!
+}
+
+type Pelicula {
+  id_pelicula: String!
+  titulo: String!
+  genero: String!
+  descripcion: String!
+  calficacion: Int!
+  duracion_minutos: Int!
+  funciones: [Funcione!]!
+}
+
+type Reserva {
+  id_reserva: String!
+  cantidad_asientos: Int!
+  estado: String!
+  total: Int!
+  fecha_reserva: String!
+}
+
+type Funcione {
+  id_funcion: String!
+  fecha_hora: String!
+  precio: Float!
+  peliculas: [Pelicula!]!
+  salas: [Sala!]!
+  reservas: [Reserva!]!
+  sala: [Sala!]!
+  pelicula: [Pelicula!]!
+}
+
+type ReservaAsiento {
+  """Example field (placeholder)"""
+  exampleField: Int!
+}
+
+type Factura {
+  id_factura: String!
+  fecha_emision: String!
+  total: Float!
+  metodo_pago: String!
+  sala: [Reserva!]!
+}
+
+type Query {
+  asientos: [Asiento!]!
+  asiento(id: String!): Asiento!
+  usuarios: [Usuario!]!
+  usuario(id: Int!): Usuario!
+  peliculas: [Pelicula!]!
+  pelicula(id: String!): Pelicula!
+  salas: [Sala!]!
+  sala(id: Int!): Sala!
+  funciones: [Funcione!]!
+  funcione(id: String!): Funcione!
+  reservas: [Reserva!]!
+  reserva(id: Int!): Reserva!
+  reservaAsiento(id: Int!): ReservaAsiento!
+  facturas: [Factura!]!
+  factura(id: Int!): Factura!
+  incidencias: [Incidencia!]!
+  incidencia(id: Int!): Incidencia!
+}
+
+type Mutation {
+  createSala(createSalaInput: CreateSalaInput!): Sala!
+  updateSala(updateSalaInput: UpdateSalaInput!): Sala!
+  removeSala(id: Int!): Sala!
+  createReserva(createReservaInput: CreateReservaInput!): Reserva!
+  updateReserva(updateReservaInput: UpdateReservaInput!): Reserva!
+  removeReserva(id: Int!): Reserva!
+  createReservaAsiento(createReservaAsientoInput: CreateReservaAsientoInput!): ReservaAsiento!
+  updateReservaAsiento(updateReservaAsientoInput: UpdateReservaAsientoInput!): ReservaAsiento!
+  removeReservaAsiento(id: Int!): ReservaAsiento!
+}
+
+input CreateSalaInput {
+  """Example field (placeholder)"""
+  exampleField: Int!
+}
+
+input UpdateSalaInput {
+  """Example field (placeholder)"""
+  exampleField: Int
+  id: Int!
+}
+
+input CreateReservaInput {
+  """Example field (placeholder)"""
+  exampleField: Int!
+}
+
+input UpdateReservaInput {
+  """Example field (placeholder)"""
+  exampleField: Int
+  id: Int!
+}
+
+input CreateReservaAsientoInput {
+  """Example field (placeholder)"""
+  exampleField: Int!
+}
+
+input UpdateReservaAsientoInput {
+  """Example field (placeholder)"""
+  exampleField: Int
+  id: Int!
+}
