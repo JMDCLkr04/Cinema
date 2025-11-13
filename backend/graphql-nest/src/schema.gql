@@ -8,19 +8,22 @@ type Asiento {
   estado: String!
 }
 
+"""Representa un usuario del sistema"""
 type Usuario {
+  """Identificador único del usuario"""
   id_usuario: String!
-  nombre: String!
-  correo: String!
-  password: String!
-  rol: String!
-  usuarios: [Usuario!]!
-}
 
-type Incidencia {
-  id_incidencia: String!
-  fecha_generacion: String!
-  usuarios: [Usuario!]!
+  """Nombre completo del usuario"""
+  nombre: String!
+
+  """Correo electrónico del usuario"""
+  correo: String!
+
+  """Contraseña del usuario (hasheada)"""
+  password: String!
+
+  """Rol del usuario (ej: admin, cliente, empleado)"""
+  rol: String!
 }
 
 type Pelicula {
@@ -41,6 +44,14 @@ type Sala {
   filas: Int!
   columnas: Int!
   asientos: [Asiento!]!
+}
+
+type Funciones {
+  id_funcion: String!
+  fecha_hora: String!
+  precio: Float!
+  peliculas: [Pelicula!]!
+  salas: [Sala!]!
 }
 
 type Reserva {
@@ -68,18 +79,12 @@ type Reserva {
   fecha_reserva: String!
 }
 
-type Funciones {
-  id_funcion: String!
-  fecha_hora: String!
-  precio: Float!
-  peliculas: [Pelicula!]!
-  salas: [Sala!]!
-  reservas: [Reserva!]!
-}
-
 type ReservaAsiento {
-  """Example field (placeholder)"""
-  exampleField: Int!
+  """ID de la reserva asociada"""
+  id_reserva: String!
+
+  """ID del asiento"""
+  id_asiento: String!
 }
 
 type Factura {
@@ -87,6 +92,16 @@ type Factura {
   fecha_emision: String!
   total: Float!
   metodo_pago: String!
+  id_reserva: String!
+
+  """Reserva asociada a la factura"""
+  reserva: Reserva
+}
+
+type Incidencia {
+  id_incidencia: String!
+  fecha_generacion: String!
+  usuarios: [Usuario!]!
 }
 
 type Query {
@@ -99,29 +114,12 @@ type Query {
   salas: [Sala!]!
   sala(id: String!): Sala!
   funciones: [Funciones!]!
-  funcione(id: String!): Funciones!
+  funcion(id: String!): Funciones!
   reservas: [Reserva!]!
   reserva(id: String!): Reserva!
-  reservaAsiento(id: Int!): ReservaAsiento!
+  reservaAsiento(id: String!): ReservaAsiento!
   facturas: [Factura!]!
   factura(id: String!): Factura!
   incidencias: [Incidencia!]!
   incidencia(id: String!): Incidencia!
-}
-
-type Mutation {
-  createReservaAsiento(createReservaAsientoInput: CreateReservaAsientoInput!): ReservaAsiento!
-  updateReservaAsiento(updateReservaAsientoInput: UpdateReservaAsientoInput!): ReservaAsiento!
-  removeReservaAsiento(id: Int!): ReservaAsiento!
-}
-
-input CreateReservaAsientoInput {
-  """Example field (placeholder)"""
-  exampleField: Int!
-}
-
-input UpdateReservaAsientoInput {
-  """Example field (placeholder)"""
-  exampleField: Int
-  id: Int!
 }
