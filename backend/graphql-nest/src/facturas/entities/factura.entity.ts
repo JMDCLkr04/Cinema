@@ -1,4 +1,5 @@
-import { ObjectType, Field, Int, Float } from '@nestjs/graphql';
+import { ObjectType, Field, Float } from '@nestjs/graphql';
+import { Reserva } from '../../reservas/entities/reserva.entity';
 
 @ObjectType()
 export class Factura {
@@ -13,4 +14,13 @@ export class Factura {
 
   @Field(() => String)
   metodo_pago: string;
+  
+  @Field(() => String)
+  id_reserva: string;
+  
+  @Field(() => Reserva, { 
+    description: 'Reserva asociada a la factura',
+    nullable: true  // Hace que el campo sea opcional en el esquema GraphQL
+  })
+  reserva?: Reserva;  // Campo opcional en TypeScript
 }

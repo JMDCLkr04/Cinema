@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
+import { HttpModule } from '@nestjs/axios';
 import { FacturasService } from './facturas.service';
 import { FacturasResolver } from './facturas.resolver';
-import { HttpModule } from 'src/http/http.module';
 
 @Module({
   imports: [HttpModule],
-  providers: [FacturasResolver, FacturasService],
+  providers: [FacturasService, FacturasResolver],
+  exports: [FacturasService]
 })
 export class FacturasModule {}
