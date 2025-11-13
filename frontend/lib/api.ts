@@ -127,6 +127,9 @@ export const functionService = {
   getById: (id: string, token: string) =>
     apiRequest<any>(API_ENDPOINTS.FUNCTIONS.DETAIL(id), 'GET', undefined, token),
     
+  getByMovieId: (movieId: string, token: string) =>
+    apiRequest<any[]>(`/funciones?id_pelicula=${movieId}`, 'GET', undefined, token),
+    
   getSeats: (funcionId: string, token: string) =>
     apiRequest<any[]>(API_ENDPOINTS.SEATS.BY_FUNCTION(funcionId), 'GET', undefined, token),
 };

@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { Movie, Funcion } from "@/lib/types"
-import { movieService } from "@/lib/api"
+import { movieService, functionService } from "@/lib/api"
 import { useAuth } from "@/contexts/auth-context"
 import Image from "next/image"
 import { Clock, Calendar, ArrowLeft, AlertCircle } from "lucide-react"
@@ -31,38 +31,46 @@ export default function MovieDetailPage() {
   useEffect(() => {
     if (!params.id || !token) return
     
-    const fetchMovieDetails = async () => {
+    const fetchMovieAndFunctions = async () => {
       try {
         setIsLoading(true)
-        const movieData = await movieService.getById(params.id as string, token)
-        console.log(movieData)
         
+        // Fetch movie details
+        const movieData = await movieService.getById(params.id as string, token)
         if (!movieData) {
           throw new Error("No se pudo cargar la información de la película")
         }
-        
         setMovie(movieData)
+        console.log(movieData)
         
-        if (movieData.funciones && movieData.funciones.length > 0) {
-          setFunciones(movieData.funciones)
-          const uniqueDates = Array.from(new Set(movieData.funciones.map((f: Funcion) => f.fecha)))
-          setSelectedDate(uniqueDates[0] as string)
+        // Fetch functions for this movie
+        const funcionesData = await functionService.getByMovieId(params.id as string, token)
+        console.log(funcionesData)
+        
+        if (funcionesData && funcionesData.length > 0) {
+          setFunciones(funcionesData)
+          const uniqueDates = Array.from(new Set(funcionesData.map((f: Funcion) => f.fecha_hora)))
+          if (uniqueDates.length > 0) {
+            setSelectedDate(uniqueDates[0] as string)
+          }
         }
         
         setError(null)
       } catch (err) {
         console.error("Error fetching movie details:", err)
-        setError("No se pudo cargar la información de la película. Intente de nuevo más tarde.")
+        setError("No se pudo cargar la información de la película o sus funciones. Intente de nuevo más tarde.")
       } finally {
         setIsLoading(false)
       }
     }
 
-    fetchMovieDetails()
+    fetchMovieAndFunctions()
   }, [params.id, token])
 
-  const availableDates = Array.from(new Set(funciones.map((f) => f.fecha))).sort()
-  const funcionesForDate = funciones.filter((f) => f.fecha === selectedDate)
+  const availableDates = Array.from(new Set(funciones.map((f) => f.fecha_hora))).sort()
+  console.log(availableDates)
+  const funcionesForDate = funciones.filter((f) => f.fecha_hora === selectedDate)
+  console.log(funcionesForDate)
 
   const handleReserve = () => {
     if (selectedFuncion) {
@@ -172,19 +180,32 @@ export default function MovieDetailPage() {
                             <SelectValue placeholder="Elige una fecha" />
                           </SelectTrigger>
                           <SelectContent>
-                            {availableDates.map((date) => (
-                              <SelectItem key={date} value={date}>
-                                <div className="flex items-center gap-2">
-                                  <Calendar className="h-4 w-4" />
-                                  {new Date(date + "T00:00:00").toLocaleDateString("es-ES", {
-                                    weekday: "long",
-                                    year: "numeric",
-                                    month: "long",
-                                    day: "numeric",
-                                  })}
-                                </div>
-                              </SelectItem>
-                            ))}
+                            {availableDates.map((date) => {
+                              // Parse the date string into a Date object
+                              const dateObj = new Date(date);
+                              // Format the date in Spanish locale
+                              const formattedDate = dateObj.toLocaleDateString("es-ES", {
+                                weekday: "long",
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              });
+                              // Format the time in 24-hour format
+                              const formattedTime = dateObj.toLocaleTimeString("es-ES", {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: false
+                              });
+                              
+                              return (
+                                <SelectItem key={date} value={date}>
+                                  <div className="flex items-center gap-2">
+                                    <Calendar className="h-4 w-4" />
+                                    {formattedDate} - {formattedTime}
+                                  </div>
+                                </SelectItem>
+                              );
+                            })}
                           </SelectContent>
                         </Select>
                       </div>
@@ -203,8 +224,8 @@ export default function MovieDetailPage() {
                                 onClick={() => setSelectedFuncion(funcion.id_funcion)}
                                 className="h-auto flex-col gap-1 py-3"
                               >
-                                <span className="text-base font-semibold">{funcion.hora}</span>
-                                <span className="text-xs opacity-80">${funcion.precio.toFixed(2)}</span>
+                                <span className="text-base font-semibold">{funcion.fecha_hora}</span>
+                                <span className="text-xs opacity-80">${funcion.precio}</span>
                               </Button>
                             ))}
                           </div>

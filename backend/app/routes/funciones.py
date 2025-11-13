@@ -18,9 +18,19 @@ def create_funcion(funcion: FuncionCreate, db: Session = Depends(get_db)):
     return db_funcion
 
 @router.get("/funciones", response_model=List[FuncionResponse])
-def get_funciones(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    """Obtener lista de funciones"""
-    funciones = db.query(Funcion).offset(skip).limit(limit).all()
+def get_funciones(
+    skip: int = 0, 
+    limit: int = 100, 
+    id_pelicula: str = None,
+    db: Session = Depends(get_db)
+):
+    """Obtener lista de funciones, opcionalmente filtradas por ID de película"""
+    query = db.query(Funcion)
+    
+    if id_pelicula:
+        query = query.filter(Funcion.id_pelicula == id_pelicula)
+        
+    funciones = query.offset(skip).limit(limit).all()
     return funciones
 
 @router.get("/funciones/{id_funcion}", response_model=FuncionResponse)

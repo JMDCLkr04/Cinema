@@ -21,8 +21,7 @@ export interface Funcion {
   id_funcion: string
   id_pelicula: string
   id_sala: string
-  fecha: string
-  hora: string
+  fecha_hora: string
   precio: number
 }
 
