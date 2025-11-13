@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
+import { HttpModule } from '@nestjs/axios';
 import { AsientosService } from './asientos.service';
 import { AsientosResolver } from './asientos.resolver';
-import { HttpModule } from 'src/http/http.module';
 
 @Module({
   imports: [HttpModule],
-  providers: [AsientosResolver, AsientosService],
+  providers: [AsientosService, AsientosResolver],
+  exports: [AsientosService]
 })
 export class AsientosModule {}

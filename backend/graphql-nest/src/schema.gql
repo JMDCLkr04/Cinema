@@ -6,18 +6,6 @@ type Asiento {
   id_asiento: String!
   numero: Int!
   estado: String!
-  sala: [Sala!]!
-}
-
-type Sala {
-  id_sala: String!
-  nombre: String!
-  capacidad: Int!
-  tipo: String!
-  estado: String!
-  filas: Int!
-  columnas: Int!
-  asientos: [Asiento!]!
 }
 
 type Usuario {
@@ -44,23 +32,49 @@ type Pelicula {
   duracion: String
 }
 
+type Sala {
+  id_sala: String!
+  nombre: String!
+  capacidad: Int!
+  tipo: String!
+  estado: String!
+  filas: Int!
+  columnas: Int!
+  asientos: [Asiento!]!
+}
+
 type Reserva {
   id_reserva: String!
+
+  """Usuario que realizó la reserva"""
+  usuario: Usuario
+
+  """ID del usuario que realizó la reserva"""
+  id_usuario: String!
+
+  """ID de la función para la que se realizó la reserva"""
+  id_funcion: String!
+
+  """Cantidad de asientos reservados"""
   cantidad_asientos: Int!
+
+  """Estado de la reserva (ej: confirmada, cancelada, pendiente)"""
   estado: String!
+
+  """Monto total de la reserva"""
   total: Int!
+
+  """Fecha en que se realizó la reserva"""
   fecha_reserva: String!
 }
 
-type Funcione {
+type Funciones {
   id_funcion: String!
   fecha_hora: String!
   precio: Float!
   peliculas: [Pelicula!]!
   salas: [Sala!]!
   reservas: [Reserva!]!
-  sala: [Sala!]!
-  pelicula: [Pelicula!]!
 }
 
 type ReservaAsiento {
@@ -73,7 +87,6 @@ type Factura {
   fecha_emision: String!
   total: Float!
   metodo_pago: String!
-  sala: [Reserva!]!
 }
 
 type Query {
@@ -84,36 +97,22 @@ type Query {
   peliculas: [Pelicula!]!
   pelicula(id: String!): Pelicula!
   salas: [Sala!]!
-  sala(id: Int!): Sala!
-  funciones: [Funcione!]!
-  funcione(id: String!): Funcione!
+  sala(id: String!): Sala!
+  funciones: [Funciones!]!
+  funcione(id: String!): Funciones!
   reservas: [Reserva!]!
-  reserva(id: Int!): Reserva!
+  reserva(id: String!): Reserva!
   reservaAsiento(id: Int!): ReservaAsiento!
   facturas: [Factura!]!
-  factura(id: Int!): Factura!
+  factura(id: String!): Factura!
   incidencias: [Incidencia!]!
-  incidencia(id: Int!): Incidencia!
+  incidencia(id: String!): Incidencia!
 }
 
 type Mutation {
-  createReserva(createReservaInput: CreateReservaInput!): Reserva!
-  updateReserva(updateReservaInput: UpdateReservaInput!): Reserva!
-  removeReserva(id: Int!): Reserva!
   createReservaAsiento(createReservaAsientoInput: CreateReservaAsientoInput!): ReservaAsiento!
   updateReservaAsiento(updateReservaAsientoInput: UpdateReservaAsientoInput!): ReservaAsiento!
   removeReservaAsiento(id: Int!): ReservaAsiento!
-}
-
-input CreateReservaInput {
-  """Example field (placeholder)"""
-  exampleField: Int!
-}
-
-input UpdateReservaInput {
-  """Example field (placeholder)"""
-  exampleField: Int
-  id: Int!
 }
 
 input CreateReservaAsientoInput {
