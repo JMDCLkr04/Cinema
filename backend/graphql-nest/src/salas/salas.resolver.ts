@@ -1,19 +1,28 @@
-import { Resolver, Query, Mutation, Args, Int } from '@nestjs/graphql';
+import { Resolver, Query, Args } from '@nestjs/graphql';
 import { Sala } from './entities/sala.entity';
-import { UpdateSalaInput } from './dto/update-sala.input';
-import { HttpServices } from 'src/http/http.service';
+import { SalasService } from './salas.service';
 
 @Resolver(() => Sala)
 export class SalasResolver {
-  constructor(private readonly httpServices:HttpServices) {}
+  constructor(private readonly salasService: SalasService) {}
 
   @Query(() => [Sala], { name: 'salas' })
-  findAll() {
-    return this.httpServices.findAllSalas();
+  async findAll() {
+    try {
+      return await this.salasService.findAll();
+    } catch (error) {
+      console.error('Error en SalasResolver.findAll:', error);
+      throw error;
+    }
   }
 
   @Query(() => Sala, { name: 'sala' })
-  findOne(@Args('id', { type: () => Int }) id: number) {
-    return this.httpServices.findOneSala(id.toString());
+  async findOne(@Args('id', { type: () => String }) id: string) {
+    try {
+      return await this.salasService.findOne(id);
+    } catch (error) {
+      console.error(`Error en SalasResolver.findOne(${id}):`, error);
+      throw error;
+    }
   }
 }
