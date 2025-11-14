@@ -10,26 +10,30 @@ router = APIRouter()
 
 @router.get("/reservas/{id_reserva}/asientos", response_model=List[dict])
 async def get_asientos_por_reserva(id_reserva: str, db: Session = Depends(get_db)):
-    """Obtener todos los asientos de una reserva"""
+    """
+    Obtener todos los asientos de una reserva
+    
+    Devuelve una lista de asientos asociados a una reserva específica con la siguiente estructura:
+    {
+        "id": "uuid",
+        "id_reserva": "uuid",
+        "id_asiento": "uuid"
+    }
+    """
     # Verificar que la reserva existe
     reserva = db.query(Reserva).filter(Reserva.id_reserva == id_reserva).first()
     if not reserva:
         raise HTTPException(status_code=404, detail="Reserva no encontrada")
     
-    # Obtener las relaciones reserva-asiento con información del asiento
-    relaciones = db.query(ReservaAsiento, Asiento).join(
-        Asiento,
-        ReservaAsiento.id_asiento == Asiento.id_asiento
-    ).filter(
+    # Obtener las relaciones reserva-asiento
+    reserva_asientos = db.query(ReservaAsiento).filter(
         ReservaAsiento.id_reserva == id_reserva
     ).all()
     
     return [{
-        "id": str(relacion[0].id),
-        "id_asiento": str(relacion[0].id_asiento), 
-        "numero_asiento": relacion[1].numero,
-        "estado_asiento": relacion[1].estado
-    } for relacion in relaciones]
+        "id_reserva": str(ra.id_reserva),
+        "id_asiento": str(ra.id_asiento)
+    } for ra in reserva_asientos]
 
 @router.post(
     "/reservas/{id_reserva}/asientos/{id_asiento}", 
