@@ -24,6 +24,6 @@ export class Sala {
   @Field(() => Int)
   columnas: number;
 
-  @Field(() => [Asiento])
-  asientos: Asiento[];
+  // @Field(() => [Asiento])
+  // asientos: Asiento[];
 }

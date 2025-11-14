@@ -43,7 +43,6 @@ export class SalasService {
       estado: sala.estado,
       filas: parseInt(sala.filas) || 0,
       columnas: parseInt(sala.columnas) || 0,
-      asientos: sala.asientos || []
     }));
   }
 
@@ -57,7 +56,6 @@ export class SalasService {
       estado: sala.estado,
       filas: parseInt(sala.filas) || 0,
       columnas: parseInt(sala.columnas) || 0,
-      asientos: sala.asientos || []
     };
   }
 }

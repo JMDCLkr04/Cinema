@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import type { Movie, Funcion } from "@/lib/types"
+import type { Pelicula, Funcion } from "@/lib/types"
 import { movieService, functionService } from "@/lib/api"
 import { useAuth } from "@/contexts/auth-context"
 import Image from "next/image"
@@ -21,7 +21,7 @@ export default function MovieDetailPage() {
   const params = useParams()
   const router = useRouter()
   const { token } = useAuth()
-  const [movie, setMovie] = useState<Movie | null>(null)
+  const [movie, setMovie] = useState<Pelicula | null>(null)
   const [funciones, setFunciones] = useState<Funcion[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
