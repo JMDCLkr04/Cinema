@@ -93,8 +93,6 @@ type Factura {
   total: Float!
   metodo_pago: String!
   id_reserva: String!
-
-  """Reserva asociada a la factura"""
   reserva: Reserva
 }
 
