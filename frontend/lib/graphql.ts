@@ -81,8 +81,22 @@ export const QUERIES = {
         id_funcion
         fecha_hora
         precio
-        peliculas { id_pelicula }
-        salas { id_sala nombre capacidad filas columnas asientos { id_asiento numero estado } }
+        peliculas { 
+          id_pelicula 
+          titulo 
+          genero 
+          clasificacion 
+          duracion 
+        }
+        salas { 
+          id_sala 
+          nombre 
+          capacidad 
+          tipo
+          estado
+          filas 
+          columnas 
+        }
       }
     }
   `,
@@ -92,8 +106,22 @@ export const QUERIES = {
         id_funcion
         fecha_hora
         precio
-        peliculas { id_pelicula titulo genero clasificacion duracion }
-        salas { id_sala nombre capacidad filas columnas asientos { id_asiento numero estado } }
+        peliculas { 
+          id_pelicula 
+          titulo 
+          genero 
+          clasificacion 
+          duracion 
+        }
+        salas { 
+          id_sala 
+          nombre 
+          capacidad 
+          tipo
+          estado
+          filas 
+          columnas 
+        }
       }
     }
   `,

@@ -28,6 +28,67 @@ export default function MovieDetailPage() {
   const [availableDates, setAvailableDates] = useState<string[]>([])
   const [funcionesForDate, setFuncionesForDate] = useState<Funcion[]>([])
 
+  // Función auxiliar para extraer solo la fecha (YYYY-MM-DD) de un timestamp
+  // Sin conversión de zona horaria para evitar que cambie el día
+  const extractDate = (fechaHora: string): string => {
+    // Si el string ya tiene formato YYYY-MM-DD, retornarlo directamente
+    if (fechaHora.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      return fechaHora
+    }
+    // Si es un timestamp ISO, extraer solo la parte de fecha sin conversión de zona horaria
+    if (fechaHora.includes('T')) {
+      return fechaHora.split('T')[0] // Retorna YYYY-MM-DD directamente del string
+    }
+    // Fallback: parsear y usar UTC para evitar cambios de día
+    const date = new Date(fechaHora)
+    const year = date.getUTCFullYear()
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0')
+    const day = String(date.getUTCDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
+
+  // Función auxiliar para formatear fecha en español
+  // Usa UTC para evitar cambios de día por zona horaria
+  const formatDateSpanish = (dateString: string): string => {
+    // Si es formato YYYY-MM-DD, parsearlo directamente
+    if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const [year, month, day] = dateString.split('-').map(Number)
+      const date = new Date(Date.UTC(year, month - 1, day))
+      return date.toLocaleDateString("es-ES", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        timeZone: "UTC"
+      })
+    }
+    // Si es un timestamp ISO, extraer la fecha y formatear
+    const date = new Date(dateString)
+    const year = date.getUTCFullYear()
+    const month = date.getUTCMonth()
+    const day = date.getUTCDate()
+    const utcDate = new Date(Date.UTC(year, month, day))
+    return utcDate.toLocaleDateString("es-ES", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      timeZone: "UTC"
+    })
+  }
+
+  // Función auxiliar para formatear hora
+  // Usa UTC para mantener la hora original
+  const formatTime = (fechaHora: string): string => {
+    const date = new Date(fechaHora)
+    return date.toLocaleTimeString("es-ES", {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+      timeZone: "UTC"
+    })
+  }
+
   useEffect(() => {
     const fetchMovie = async () => {
       const movieId = params.id as string
@@ -48,7 +109,14 @@ export default function MovieDetailPage() {
         setIsLoading(true)
         setError(null)
         
+        // Cargar película primero (secuencial para evitar conexiones simultáneas)
         const pelicula = await movieService.getById(movieId, token)
+        
+        // Luego cargar funciones (después de que la primera petición termine)
+        const funcionesData = await functionService.getByMovieId(movieId, token)
+
+        const example = funcionesData
+        console.log(example)
         
         // Mapear la película para asegurar que tenga el formato correcto
         const mappedMovie: Pelicula = {
@@ -64,10 +132,32 @@ export default function MovieDetailPage() {
         }
         
         setMovie(mappedMovie)
+
+        // Mapear funciones al formato esperado
+        const mappedFunciones: Funcion[] = funcionesData.map((f: any) => ({
+          id_funcion: f.id_funcion,
+          id_pelicula: f.id_pelicula,
+          id_sala: f.id_sala,
+          fecha_hora: f.fecha_hora,
+          precio: typeof f.precio === 'string' ? parseFloat(f.precio) : f.precio || 0,
+        }))
+
+        setFunciones(mappedFunciones)
+        const newFunciones = mappedFunciones
+        console.log(newFunciones)
+
+        // Extraer fechas únicas disponibles
+        const uniqueDates = Array.from(
+          new Set(mappedFunciones.map(f => extractDate(f.fecha_hora)))
+        ).sort() // Ordenar fechas cronológicamente
+
+        setAvailableDates(uniqueDates)
       } catch (err) {
         console.error('Error al cargar la película:', err)
         setError(err instanceof Error ? err.message : 'Error al cargar la información de la película')
         setMovie(null)
+        setFunciones([])
+        setAvailableDates([])
       } finally {
         setIsLoading(false)
       }
@@ -75,6 +165,24 @@ export default function MovieDetailPage() {
 
     fetchMovie()
   }, [params.id, token])
+
+  // Efecto para filtrar funciones cuando se selecciona una fecha
+  useEffect(() => {
+    if (selectedDate && funciones.length > 0) {
+      const funcionesFiltradas = funciones.filter(f => 
+        extractDate(f.fecha_hora) === selectedDate
+      )
+      // Ordenar por hora
+      funcionesFiltradas.sort((a, b) => 
+        new Date(a.fecha_hora).getTime() - new Date(b.fecha_hora).getTime()
+      )
+      setFuncionesForDate(funcionesFiltradas)
+      // Limpiar selección de función cuando cambia la fecha
+      setSelectedFuncion("")
+    } else {
+      setFuncionesForDate([])
+    }
+  }, [selectedDate, funciones])
 
   const handleReserve = () => {
     if (selectedFuncion) {
@@ -178,39 +286,27 @@ export default function MovieDetailPage() {
                       {/* Date Selector */}
                       <div>
                         <label className="mb-2 block text-sm font-medium text-foreground">Selecciona una fecha</label>
-                        <Select value={selectedDate} onValueChange={setSelectedDate}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Elige una fecha" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {availableDates.map((date) => {
-                              // Parse the date string into a Date object
-                              const dateObj = new Date(date);
-                              // Format the date in Spanish locale
-                              const formattedDate = dateObj.toLocaleDateString("es-ES", {
-                                weekday: "long",
-                                year: "numeric",
-                                month: "long",
-                                day: "numeric",
-                              });
-                              // Format the time in 24-hour format
-                              const formattedTime = dateObj.toLocaleTimeString("es-ES", {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                hour12: false
-                              });
-                              
-                              return (
+                        {availableDates.length === 0 ? (
+                          <div className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
+                            No hay funciones disponibles para esta película
+                          </div>
+                        ) : (
+                          <Select value={selectedDate} onValueChange={setSelectedDate}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Elige una fecha" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {availableDates.map((date) => (
                                 <SelectItem key={date} value={date}>
                                   <div className="flex items-center gap-2">
                                     <Calendar className="h-4 w-4" />
-                                    {formattedDate} - {formattedTime}
+                                    {formatDateSpanish(date)}
                                   </div>
                                 </SelectItem>
-                              );
-                            })}
-                          </SelectContent>
-                        </Select>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
                       </div>
 
                       {/* Time Selector */}
@@ -219,19 +315,25 @@ export default function MovieDetailPage() {
                           <label className="mb-2 block text-sm font-medium text-foreground">
                             Selecciona un horario
                           </label>
-                          <div className="grid grid-cols-2 gap-2">
-                            {funcionesForDate.map((funcion) => (
-                              <Button
-                                key={funcion.id_funcion}
-                                variant={selectedFuncion === funcion.id_funcion ? "default" : "outline"}
-                                onClick={() => setSelectedFuncion(funcion.id_funcion)}
-                                className="h-auto flex-col gap-1 py-3"
-                              >
-                                <span className="text-base font-semibold">{funcion.fecha_hora}</span>
-                                <span className="text-xs opacity-80">${funcion.precio}</span>
-                              </Button>
-                            ))}
-                          </div>
+                          {funcionesForDate.length === 0 ? (
+                            <div className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
+                              No hay horarios disponibles para esta fecha
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-2 gap-2">
+                              {funcionesForDate.map((funcion) => (
+                                <Button
+                                  key={funcion.id_funcion}
+                                  variant={selectedFuncion === funcion.id_funcion ? "default" : "outline"}
+                                  onClick={() => setSelectedFuncion(funcion.id_funcion)}
+                                  className="h-auto flex-col gap-1 py-3"
+                                >
+                                  <span className="text-base font-semibold">{formatTime(funcion.fecha_hora)}</span>
+                                  <span className="text-xs opacity-80">${funcion.precio.toFixed(2)}</span>
+                                </Button>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       )}
 

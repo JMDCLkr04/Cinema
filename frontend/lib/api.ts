@@ -158,16 +158,20 @@ export const functionService = {
     const funciones = (data.funciones || []).filter(
       (f) =>
         Array.isArray(f.peliculas) &&
-        f.peliculas.some((p: any) => p.id_pelicula === movieId)
+        f.peliculas.filter((p: any) => p.id_pelicula === movieId)
     );
     // Adaptar al contrato del frontend: { id_funcion, fecha_hora, precio, id_pelicula, id_sala }
-    return funciones.map((f: any) => ({
+    const mapped = funciones.map((f: any) => ({
       id_funcion: f.id_funcion,
       fecha_hora: f.fecha_hora,
       precio: f.precio,
       id_pelicula: f.peliculas?.[0]?.id_pelicula ?? movieId,
       id_sala: f.salas?.[0]?.id_sala ?? undefined,
     }));
+    
+    console.log('✅ Funciones mapeadas finales:', mapped);
+    
+    return mapped;
   },
 
   getSeats: (funcionId: string, token: string) =>
