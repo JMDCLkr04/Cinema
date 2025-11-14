@@ -145,13 +145,70 @@ export default function SeatSelectionPage() {
   }, [params.funcionId, token, router])
 
   const handleSeatClick = useCallback(
-    () => {
-      console.log('handleSeatClick')
-    }
-  , [])
+    (seatId: string) => {
+      const seat = seats.find((s) => s.id_asiento === seatId)
+      if (!seat) return
+
+      // No permitir seleccionar asientos ocupados
+      if (seat.estado === "ocupado") {
+        return
+      }
+
+      // Si el asiento ya está seleccionado, deseleccionarlo
+      if (selectedSeats.includes(seatId)) {
+        setSelectedSeats((prev) => prev.filter((id) => id !== seatId))
+        setSeats((prevSeats) =>
+          prevSeats.map((s) =>
+            s.id_asiento === seatId ? { ...s, estado: "disponible" } : s
+          )
+        )
+        return
+      }
+
+      // Si ya se alcanzó el límite de boletos, no permitir más selecciones
+      if (selectedSeats.length >= ticketCount) {
+        return
+      }
+
+      // Seleccionar el asiento
+      setSelectedSeats((prev) => [...prev, seatId])
+      setSeats((prevSeats) =>
+        prevSeats.map((s) =>
+          s.id_asiento === seatId ? { ...s, estado: "seleccionado" } : s
+        )
+      )
+    },
+    [seats, selectedSeats, ticketCount]
+  )
 
   const handleContinue = () => {
-    
+    if (!funcionDetails || selectedSeats.length !== ticketCount) {
+      return
+    }
+
+    // Obtener los asientos seleccionados completos
+    const selectedSeatsData = seats.filter((seat) =>
+      selectedSeats.includes(seat.id_asiento)
+    )
+
+    // Guardar datos en sessionStorage para el checkout
+    const reservationData = {
+      funcionId: funcionDetails.funcion.id_funcion,
+      seatIds: selectedSeats,
+      ticketCount: ticketCount,
+      // Guardar también toda la información necesaria para el checkout
+      checkoutData: {
+        funcion: funcionDetails.funcion,
+        pelicula: funcionDetails.pelicula,
+        sala: funcionDetails.sala,
+        seats: selectedSeatsData,
+      },
+    }
+
+    sessionStorage.setItem("reservation", JSON.stringify(reservationData))
+
+    // Redirigir a checkout
+    router.push("/checkout")
   }
 
   if (isLoading) {
@@ -177,7 +234,8 @@ export default function SeatSelectionPage() {
     )
   }
 
-  const totalPrice = funcionDetails.funcion.precio * ticketCount
+  // Calcular el total basado en los asientos seleccionados
+  const totalPrice = funcionDetails.funcion.precio * (selectedSeats.length > 0 ? selectedSeats.length : ticketCount)
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -234,10 +292,20 @@ export default function SeatSelectionPage() {
                       value={ticketCount}
                       onChange={(e) => {
                         const value = Number.parseInt(e.target.value) || 1
-                        setTicketCount(Math.max(1, Math.min(10, value)))
+                        const newCount = Math.max(1, Math.min(10, value))
+                        setTicketCount(newCount)
                         // Clear selection if new count is less
-                        if (selectedSeats.length > value) {
-                          setSelectedSeats((prev) => prev.slice(0, value))
+                        if (selectedSeats.length > newCount) {
+                          const seatsToDeselect = selectedSeats.slice(newCount)
+                          setSelectedSeats((prev) => prev.slice(0, newCount))
+                          // Actualizar el estado de los asientos deseleccionados
+                          setSeats((prevSeats) =>
+                            prevSeats.map((s) =>
+                              seatsToDeselect.includes(s.id_asiento)
+                                ? { ...s, estado: "disponible" }
+                                : s
+                            )
+                          )
                         }
                       }}
                       className="w-32"
@@ -281,14 +349,14 @@ export default function SeatSelectionPage() {
                         <div className="flex flex-wrap gap-2">
                           {selectedSeats.map((seatId) => {
                             const seat = seats.find((s) => s.id_asiento === seatId)
+                            if (!seat) return null
                             return (
                               <div
                                 key={seatId}
                                 className="flex items-center gap-1 rounded-md bg-primary/10 px-3 py-1 text-sm font-medium text-primary"
                               >
                                 <Armchair className="h-3 w-3" />
-                                {/* {seat?.fila} */}
-                                {seat?.numero}
+                                {seat.fila}{seat.numero}
                               </div>
                             )
                           })}
@@ -300,6 +368,10 @@ export default function SeatSelectionPage() {
                       <div className="mb-2 flex justify-between text-sm">
                         <span className="text-muted-foreground">Precio por boleto</span>
                         <span className="font-medium text-foreground">${funcionDetails.funcion.precio.toFixed(2)}</span>
+                      </div>
+                      <div className="mb-2 flex justify-between text-sm">
+                        <span className="text-muted-foreground">Cantidad</span>
+                        <span className="font-medium text-foreground">{ticketCount} boleto(s)</span>
                       </div>
                       <div className="flex justify-between text-lg font-bold">
                         <span className="text-foreground">Total</span>
