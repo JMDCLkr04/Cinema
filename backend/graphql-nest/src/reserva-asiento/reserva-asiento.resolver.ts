@@ -5,14 +5,11 @@ import { ReservaAsiento } from './entities/reserva-asiento.entity';
 @Resolver(() => ReservaAsiento)
 export class ReservaAsientoResolver {
   constructor(private readonly reservaAsientoService: ReservaAsientoService) {}
-
-  @Query(() => [ReservaAsiento], { name: 'reservaAsiento' })
-  findAll() {
-    return this.reservaAsientoService.findAll();
-  }
-
-  @Query(() => ReservaAsiento, { name: 'reservaAsiento' })
-  findOne(@Args('id', { type: () => String }) id: string) {
-    return this.reservaAsientoService.findOne(id);
+  
+  @Query(() => [ReservaAsiento], { name: 'asientosPorReserva' })
+  findAsientosByReserva(
+    @Args('id_reserva', { type: () => String }) id_reserva: string
+  ) {
+    return this.reservaAsientoService.findAsientosByReserva(id_reserva);
   }
 }

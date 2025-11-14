@@ -79,12 +79,16 @@ type Reserva {
   fecha_reserva: String!
 }
 
+"""Representa la relación entre una reserva y un asiento"""
 type ReservaAsiento {
+  """ID único de la relación reserva-asiento"""
+  id: ID!
+
   """ID de la reserva asociada"""
   id_reserva: String!
 
-  """ID del asiento"""
-  id_asiento: String!
+  """ID del asiento reservado"""
+  id_asiento: ID!
 }
 
 type Factura {
@@ -117,7 +121,7 @@ type Query {
   funcion(id: String!): Funciones!
   reservas: [Reserva!]!
   reserva(id: String!): Reserva!
-  reservaAsiento(id: String!): ReservaAsiento!
+  asientosPorReserva(id_reserva: String!): [ReservaAsiento!]!
   facturas: [Factura!]!
   factura(id: String!): Factura!
   incidencias: [Incidencia!]!
