@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { Factura } from './entities/factura.entity';
-import { Reserva } from '../reservas/entities/reserva.entity';
 
 @Injectable()
 export class FacturasService {
@@ -35,56 +34,26 @@ export class FacturasService {
   }
 
   async findAll(): Promise<Factura[]> {
-    const facturas = await this.handleRequest<Array<Factura & { reserva?: Partial<Reserva> }>>('/facturas');
-    return facturas.map(factura => {
-      const facturaData: Factura = {
-        id_factura: factura.id_factura,
-        fecha_emision: factura.fecha_emision || new Date().toISOString(),
-        total: parseFloat(factura.total as unknown as string) || 0,
-        metodo_pago: factura.metodo_pago || 'efectivo',
-        id_reserva: factura.id_reserva,
-        reserva: undefined
-      };
-
-      if (factura.reserva) {
-        facturaData.reserva = {
-          id_reserva: factura.reserva.id_reserva,
-          id_usuario: factura.reserva.id_usuario,
-          id_funcion: factura.reserva.id_funcion,
-          cantidad_asientos: factura.reserva.cantidad_asientos,
-          estado: factura.reserva.estado,
-          total: factura.reserva.total,
-          fecha_reserva: factura.reserva.fecha_reserva || new Date().toISOString()
-        } as Reserva;
-      }
-
-      return facturaData;
-    });
+    const facturas = await this.handleRequest<any[]>('/facturas');
+    return facturas.map(factura => ({
+      id_factura: String(factura.id_factura),
+      fecha_emision: factura.fecha_emision || new Date().toISOString(),
+      total: parseFloat(factura.total) || 0,
+      metodo_pago: factura.metodo_pago || 'efectivo',
+      id_reserva: factura.id_reserva ? String(factura.id_reserva) : '',
+      reserva: undefined, // Se resuelve en el resolver
+    }));
   }
 
   async findOne(id: string): Promise<Factura> {
-    const factura = await this.handleRequest<Factura & { reserva?: Partial<Reserva> }>(`/facturas/${id}`);
-    const facturaData: Factura = {
-      id_factura: factura.id_factura,
+    const factura = await this.handleRequest<any>(`/facturas/${id}`);
+    return {
+      id_factura: String(factura.id_factura),
       fecha_emision: factura.fecha_emision || new Date().toISOString(),
-      total: parseFloat(factura.total as unknown as string) || 0,
+      total: parseFloat(factura.total) || 0,
       metodo_pago: factura.metodo_pago || 'efectivo',
-      id_reserva: factura.id_reserva,
-      reserva: undefined
+      id_reserva: factura.id_reserva ? String(factura.id_reserva) : '',
+      reserva: undefined, // Se resuelve en el resolver
     };
-
-    if (factura.reserva) {
-      facturaData.reserva = {
-        id_reserva: factura.reserva.id_reserva,
-        id_usuario: factura.reserva.id_usuario,
-        id_funcion: factura.reserva.id_funcion,
-        cantidad_asientos: factura.reserva.cantidad_asientos,
-        estado: factura.reserva.estado,
-        total: factura.reserva.total,
-        fecha_reserva: factura.reserva.fecha_reserva || new Date().toISOString()
-      } as Reserva;
-    }
-
-    return facturaData;
   }
 }
