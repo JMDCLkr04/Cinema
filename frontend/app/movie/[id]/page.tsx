@@ -1,7 +1,5 @@
 "use client"
 
-"use client"
-
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Header } from "@/components/layout/header"
@@ -31,8 +29,52 @@ export default function MovieDetailPage() {
   const [funcionesForDate, setFuncionesForDate] = useState<Funcion[]>([])
 
   useEffect(() => {
-    
-  }, [])
+    const fetchMovie = async () => {
+      const movieId = params.id as string
+      
+      if (!movieId) {
+        setError('ID de película no válido')
+        setIsLoading(false)
+        return
+      }
+
+      if (!token) {
+        setError('Debes iniciar sesión para ver los detalles de la película')
+        setIsLoading(false)
+        return
+      }
+
+      try {
+        setIsLoading(true)
+        setError(null)
+        
+        const pelicula = await movieService.getById(movieId, token)
+        
+        // Mapear la película para asegurar que tenga el formato correcto
+        const mappedMovie: Pelicula = {
+          id_pelicula: pelicula.id_pelicula,
+          titulo: pelicula.titulo || '',
+          genero: pelicula.genero || '',
+          descripcion: pelicula.descripcion || '',
+          clasificacion: pelicula.clasificacion || '',
+          duracion: typeof pelicula.duracion === 'string' 
+            ? parseInt(pelicula.duracion) || 0 
+            : pelicula.duracion || 0,
+          imagen_url: pelicula.image_url || pelicula.imagen_url || '',
+        }
+        
+        setMovie(mappedMovie)
+      } catch (err) {
+        console.error('Error al cargar la película:', err)
+        setError(err instanceof Error ? err.message : 'Error al cargar la información de la película')
+        setMovie(null)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchMovie()
+  }, [params.id, token])
 
   const handleReserve = () => {
     if (selectedFuncion) {

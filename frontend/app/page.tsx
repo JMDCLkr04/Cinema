@@ -9,6 +9,8 @@ import type { Pelicula } from "@/lib/types"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
+import { Header } from "@/components/layout/header"
+import { Footer } from "@/components/layout/footer"
 
 export default function HomePage() {
   const { token } = useAuth()
@@ -114,29 +116,33 @@ export default function HomePage() {
   }
 
   return (
-    <div className="container py-8">
-      <div className="mb-8">
-        <h1 className="mb-2 text-4xl font-bold tracking-tight text-foreground md:text-5xl">
-          Cartelera
-        </h1>
-        <p className="text-lg text-muted-foreground">
-          Descubre las películas en exhibición y reserva tus boletos
-        </p>
+    <main className="flex min-h-screen flex-col bg-background">
+      <Header />
+      <div className="container py-8 px-4 md:px-6 lg:px-8">
+        <div className="mb-8">
+          <h1 className="mb-2 text-4xl font-bold tracking-tight text-foreground md:text-5xl">
+            Cartelera
+          </h1>
+          <p className="text-lg text-muted-foreground">
+            Descubre las películas en exhibición y reserva tus boletos
+          </p>
+        </div>
+
+        <MovieFilters onFilter={handleFilter} />
+
+        {filteredMovies.length === 0 ? (
+          <div className="py-20 text-center">
+            <p className="text-lg text-muted-foreground">No se encontraron películas</p>
+          </div>
+        ) : (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {filteredMovies.map((pelicula) => (
+              <MovieCard key={pelicula.id_pelicula} pelicula={pelicula} />
+            ))}
+          </div>
+        )}
       </div>
-
-      <MovieFilters onFilter={handleFilter} />
-
-      {filteredMovies.length === 0 ? (
-        <div className="py-20 text-center">
-          <p className="text-lg text-muted-foreground">No se encontraron películas</p>
-        </div>
-      ) : (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filteredMovies.map((pelicula) => (
-            <MovieCard key={pelicula.id_pelicula} pelicula={pelicula} />
-          ))}
-        </div>
-      )}
-    </div>
+      <Footer />
+    </main>
   )
 }
