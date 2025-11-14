@@ -19,4 +19,7 @@ export class Pelicula {
 
   @Field(() => String, { nullable: true })
   duracion?: string;
+
+  @Field(() => String, { nullable: true })
+  image_url?: string;
 }

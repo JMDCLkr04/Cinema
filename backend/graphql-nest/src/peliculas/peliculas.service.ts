@@ -41,7 +41,8 @@ export class PeliculasService {
       genero: pelicula.genero,
       descripcion: pelicula.descripcion,
       clasificacion: pelicula.clasificacion,
-      duracion: pelicula.duracion
+      duracion: pelicula.duracion,
+      image_url: pelicula.image_url
     }));
   }
 
@@ -53,7 +54,8 @@ export class PeliculasService {
       genero: pelicula.genero,
       descripcion: pelicula.descripcion,
       clasificacion: pelicula.clasificacion,
-      duracion: pelicula.duracion
+      duracion: pelicula.duracion,
+      image_url: pelicula.image_url
     };
   }
 }

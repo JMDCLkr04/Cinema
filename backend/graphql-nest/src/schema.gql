@@ -33,6 +33,7 @@ type Pelicula {
   descripcion: String
   clasificacion: String
   duracion: String
+  image_url: String
 }
 
 type Sala {

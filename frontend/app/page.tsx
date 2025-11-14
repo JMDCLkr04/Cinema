@@ -5,32 +5,52 @@ import { useAuth } from "@/contexts/auth-context"
 import { MovieCard } from "@/components/movies/movie-card"
 import { MovieFilters } from "@/components/movies/movie-filters"
 import { movieService } from "@/lib/api"
-import type { Movie } from "@/lib/types"
+import type { Pelicula } from "@/lib/types"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
 
 export default function HomePage() {
   const { token } = useAuth()
-  const [movies, setMovies] = useState<Movie[]>([])
-  const [filteredMovies, setFilteredMovies] = useState<Movie[]>([])
+  const [movies, setMovies] = useState<Pelicula[]>([])
+  const [filteredMovies, setFilteredMovies] = useState<Pelicula[]>([])
   const [isLoadingMovies, setIsLoadingMovies] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   // Cargar películas cuando el token esté disponible
   useEffect(() => {
     const fetchMovies = async () => {
-      if (!token) return
-      
+      if (!token) {
+        setIsLoadingMovies(false)
+        return
+      }
+
       try {
         setIsLoadingMovies(true)
-        const data = await movieService.getAll(token)
-        setMovies(data)
-        setFilteredMovies(data)
         setError(null)
+        
+        const peliculas = await movieService.getAll(token)
+        
+        // Mapear las películas para asegurar que tengan el formato correcto
+        const mappedMovies: Pelicula[] = peliculas.map((pelicula: any) => ({
+          id_pelicula: pelicula.id_pelicula,
+          titulo: pelicula.titulo || '',
+          genero: pelicula.genero || '',
+          descripcion: pelicula.descripcion || '',
+          clasificacion: pelicula.clasificacion || '',
+          duracion: typeof pelicula.duracion === 'string' 
+            ? parseInt(pelicula.duracion) || 0 
+            : pelicula.duracion || 0,
+          imagen_url: pelicula.image_url || pelicula.imagen_url || '',
+        }))
+        
+        setMovies(mappedMovies)
+        setFilteredMovies(mappedMovies)
       } catch (err) {
-        console.error("Error al cargar películas:", err)
-        setError("No se pudieron cargar las películas. Intente de nuevo más tarde.")
+        console.error('Error al cargar películas:', err)
+        setError(err instanceof Error ? err.message : 'Error al cargar las películas')
+        setMovies([])
+        setFilteredMovies([])
       } finally {
         setIsLoadingMovies(false)
       }
@@ -112,8 +132,8 @@ export default function HomePage() {
         </div>
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filteredMovies.map((movie) => (
-            <MovieCard key={movie.id_pelicula} movie={movie} />
+          {filteredMovies.map((pelicula) => (
+            <MovieCard key={pelicula.id_pelicula} pelicula={pelicula} />
           ))}
         </div>
       )}

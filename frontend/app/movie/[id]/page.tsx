@@ -27,50 +27,12 @@ export default function MovieDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [selectedDate, setSelectedDate] = useState<string>("")
   const [selectedFuncion, setSelectedFuncion] = useState<string>("")
+  const [availableDates, setAvailableDates] = useState<string[]>([])
+  const [funcionesForDate, setFuncionesForDate] = useState<Funcion[]>([])
 
   useEffect(() => {
-    if (!params.id || !token) return
     
-    const fetchMovieAndFunctions = async () => {
-      try {
-        setIsLoading(true)
-        
-        // Fetch movie details
-        const movieData = await movieService.getById(params.id as string, token)
-        if (!movieData) {
-          throw new Error("No se pudo cargar la información de la película")
-        }
-        setMovie(movieData)
-        console.log(movieData)
-        
-        // Fetch functions for this movie
-        const funcionesData = await functionService.getByMovieId(params.id as string, token)
-        console.log(funcionesData)
-        
-        if (funcionesData && funcionesData.length > 0) {
-          setFunciones(funcionesData)
-          const uniqueDates = Array.from(new Set(funcionesData.map((f: Funcion) => f.fecha_hora)))
-          if (uniqueDates.length > 0) {
-            setSelectedDate(uniqueDates[0] as string)
-          }
-        }
-        
-        setError(null)
-      } catch (err) {
-        console.error("Error fetching movie details:", err)
-        setError("No se pudo cargar la información de la película o sus funciones. Intente de nuevo más tarde.")
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchMovieAndFunctions()
-  }, [params.id, token])
-
-  const availableDates = Array.from(new Set(funciones.map((f) => f.fecha_hora))).sort()
-  console.log(availableDates)
-  const funcionesForDate = funciones.filter((f) => f.fecha_hora === selectedDate)
-  console.log(funcionesForDate)
+  }, [])
 
   const handleReserve = () => {
     if (selectedFuncion) {
@@ -117,7 +79,6 @@ export default function MovieDetailPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Header />
-
       <main className="flex-1">
         {/* Hero Section */}
         <div className="relative h-[400px] w-full md:h-[500px]">

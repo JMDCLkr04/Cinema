@@ -3,25 +3,25 @@
 import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import type { Movie } from "@/lib/types"
+import type { Pelicula } from "@/lib/types"
 import Image from "next/image"
 
 interface MovieCardProps {
-  movie: Movie
+    pelicula: Pelicula
 }
 
-export function MovieCard({ movie }: MovieCardProps) {
+export function MovieCard({ pelicula }: MovieCardProps) {
   const router = useRouter()
 
   return (
     <Card
       className="group cursor-pointer overflow-hidden transition-all hover:scale-105 hover:shadow-xl"
-      onClick={() => router.push(`/movie/${movie.id_pelicula}`)}
+      onClick={() => router.push(`/movie/${pelicula.id_pelicula}`)}
     >
       <div className="relative aspect-[2/3] overflow-hidden bg-muted">
         <Image
-          src={movie.imagen_url || `/placeholder.svg?height=600&width=400&query=${encodeURIComponent(movie.titulo)}`}
-          alt={movie.titulo}
+          src={pelicula.imagen_url || `/placeholder.svg?height=600&width=400&query=${encodeURIComponent(pelicula.titulo)}`}
+          alt={pelicula.titulo}
           fill
           className="object-cover transition-transform group-hover:scale-110"
         />
@@ -30,18 +30,18 @@ export function MovieCard({ movie }: MovieCardProps) {
         <div className="absolute bottom-0 left-0 right-0 p-4">
           <div className="mb-2 flex flex-wrap gap-2">
             <Badge variant="secondary" className="bg-primary/90 text-primary-foreground">
-              {movie.genero}
+              {pelicula.genero}
             </Badge>
             <Badge variant="outline" className="border-white/50 bg-black/50 text-white">
-              {movie.clasificacion}
+              {pelicula.clasificacion}
             </Badge>
           </div>
         </div>
       </div>
 
       <CardContent className="p-4">
-        <h3 className="text-balance text-lg font-semibold text-foreground line-clamp-2">{movie.titulo}</h3>
-        <p className="mt-1 text-pretty text-sm text-muted-foreground line-clamp-2">{movie.descripcion}</p>
+        <h3 className="text-balance text-lg font-semibold text-foreground line-clamp-2">{pelicula.titulo}</h3>
+        <p className="mt-1 text-pretty text-sm text-muted-foreground line-clamp-2">{pelicula.descripcion}</p>
       </CardContent>
     </Card>
   )

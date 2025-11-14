@@ -45,7 +45,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         correo: (user as any).correo || email,
         nombre: (user as any).nombre || '',
         rol: (user as any).rol || 'cliente',
-        email: email // For backward compatibility
       };
       
       localStorage.setItem("user", JSON.stringify(userData))
