@@ -10,119 +10,148 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { SeatGrid } from "@/components/seats/seat-grid"
 import { SeatLegend } from "@/components/seats/seat-legend"
-import type { Asiento, Funcion, Movie, Sala } from "@/lib/types"
+import type { Asiento, Funcion, Pelicula, Sala } from "@/lib/types"
+import { functionService } from "@/lib/api"
 import { ArrowLeft, Armchair } from "lucide-react"
 import { useWebSocket } from "@/hooks/use-websocket"
 
 interface FuncionDetails {
   funcion: Funcion
-  movie: Movie
+  pelicula: Pelicula
   sala: Sala
 }
 
 export default function SeatSelectionPage() {
   const params = useParams()
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, token } = useAuth()
   const [funcionDetails, setFuncionDetails] = useState<FuncionDetails | null>(null)
   const [seats, setSeats] = useState<Asiento[]>([])
   const [selectedSeats, setSelectedSeats] = useState<string[]>([])
   const [ticketCount, setTicketCount] = useState<number>(1)
   const [isLoading, setIsLoading] = useState(true)
 
-  // WebSocket connection for real-time seat updates
-  const { sendMessage, lastMessage } = useWebSocket(`/api/seats/ws?funcionId=${params.funcionId}`)
+  // Función auxiliar para convertir número a letra de fila (1 -> A, 2 -> B, etc.)
+  const numberToRowLetter = (num: number): string => {
+    return String.fromCharCode(64 + num) // A=65, B=66, etc.
+  }
+
+  // Función auxiliar para generar asientos basados en filas y columnas
+  const generateSeats = (sala: Sala): Asiento[] => {
+    const asientos: Asiento[] = []
+    let seatNumber = 1
+    
+    for (let fila = 1; fila <= sala.filas; fila++) {
+      const filaLetter = numberToRowLetter(fila)
+      for (let columna = 1; columna <= sala.columnas; columna++) {
+        asientos.push({
+          id_asiento: `${sala.id_sala}-${filaLetter}-${columna}`, // ID temporal basado en posición
+          id_sala: sala.id_sala,
+          fila: filaLetter,
+          numero: columna,
+          estado: "disponible" as const,
+        })
+        seatNumber++
+      }
+    }
+    
+    return asientos
+  }
 
   useEffect(() => {
     const fetchFuncionDetails = async () => {
+      const funcionId = params.funcionId as string
+      
+      if (!funcionId) {
+        setIsLoading(false)
+        return
+      }
+
+      if (!token) {
+        router.push("/login")
+        return
+      }
+
       try {
-        const response = await fetch(`/api/funciones/${params.funcionId}`)
-        const data = await response.json()
-        setFuncionDetails(data)
-        setSeats(data.seats)
-      } catch (error) {
-        console.error("Error fetching funcion details:", error)
+        setIsLoading(true)
+        
+        // Obtener función con película y sala usando GraphQL
+        const funcionData = await functionService.getByIdGraphQL(funcionId, token)
+        
+        if (!funcionData) {
+          throw new Error("No se pudo obtener la información de la función")
+        }
+        
+        // Mapear la película
+        const pelicula: Pelicula = {
+          id_pelicula: funcionData.peliculas?.[0]?.id_pelicula || '',
+          titulo: funcionData.peliculas?.[0]?.titulo || '',
+          genero: funcionData.peliculas?.[0]?.genero || '',
+          descripcion: funcionData.peliculas?.[0]?.descripcion || '',
+          clasificacion: funcionData.peliculas?.[0]?.clasificacion || '',
+          duracion: typeof funcionData.peliculas?.[0]?.duracion === 'string' 
+            ? parseInt(funcionData.peliculas[0].duracion) || 0 
+            : funcionData.peliculas?.[0]?.duracion || 0,
+          imagen_url: funcionData.peliculas?.[0]?.image_url || '',
+        }
+        
+        // Mapear la sala
+        const sala: Sala = {
+          id_sala: funcionData.salas?.[0]?.id_sala || '',
+          nombre: funcionData.salas?.[0]?.nombre || '',
+          capacidad: typeof funcionData.salas?.[0]?.capacidad === 'string'
+            ? parseInt(funcionData.salas[0].capacidad) || 0
+            : funcionData.salas?.[0]?.capacidad || 0,
+          tipo: funcionData.salas?.[0]?.tipo || '',
+          estado: funcionData.salas?.[0]?.estado || '',
+          filas: typeof funcionData.salas?.[0]?.filas === 'string'
+            ? parseInt(funcionData.salas[0].filas) || 0
+            : funcionData.salas?.[0]?.filas || 0,
+          columnas: typeof funcionData.salas?.[0]?.columnas === 'string'
+            ? parseInt(funcionData.salas[0].columnas) || 0
+            : funcionData.salas?.[0]?.columnas || 0,
+        }
+        
+        // Mapear la función
+        const funcion: Funcion = {
+          id_funcion: funcionData.id_funcion,
+          id_pelicula: pelicula.id_pelicula,
+          id_sala: sala.id_sala,
+          fecha_hora: funcionData.fecha_hora,
+          precio: typeof funcionData.precio === 'string' 
+            ? parseFloat(funcionData.precio) 
+            : funcionData.precio || 0,
+        }
+        
+        // Generar asientos basados en las filas y columnas de la sala
+        const asientos = generateSeats(sala)
+        
+        setFuncionDetails({
+          funcion,
+          pelicula,
+          sala,
+        })
+        
+        setSeats(asientos)
+      } catch (err) {
+        console.error('Error al cargar los detalles de la función:', err)
+        setFuncionDetails(null)
       } finally {
         setIsLoading(false)
       }
     }
 
     fetchFuncionDetails()
-  }, [params.funcionId])
-
-  // Handle WebSocket messages for real-time seat updates
-  useEffect(() => {
-    if (lastMessage) {
-      const data = JSON.parse(lastMessage)
-
-      if (data.type === "seat-update") {
-        setSeats((prevSeats) =>
-          prevSeats.map((seat) => (seat.id_asiento === data.seatId ? { ...seat, estado: data.estado } : seat)),
-        )
-      } else if (data.type === "seat-released") {
-        setSeats((prevSeats) =>
-          prevSeats.map((seat) => (seat.id_asiento === data.seatId ? { ...seat, estado: "disponible" } : seat)),
-        )
-      }
-    }
-  }, [lastMessage])
+  }, [params.funcionId, token, router])
 
   const handleSeatClick = useCallback(
-    (seatId: string) => {
-      const seat = seats.find((s) => s.id_asiento === seatId)
-      if (!seat) return
-
-      // Can't select occupied or in-process (by others) seats
-      if (seat.estado === "ocupado" || (seat.estado === "en-proceso" && !selectedSeats.includes(seatId))) {
-        return
-      }
-
-      if (selectedSeats.includes(seatId)) {
-        // Deselect seat
-        setSelectedSeats((prev) => prev.filter((id) => id !== seatId))
-        sendMessage(
-          JSON.stringify({
-            type: "release-seat",
-            seatId,
-            userId: user?.id_usuario,
-          }),
-        )
-      } else {
-        // Check if we can select more seats
-        if (selectedSeats.length >= ticketCount) {
-          return
-        }
-
-        // Try to select seat
-        sendMessage(
-          JSON.stringify({
-            type: "select-seat",
-            seatId,
-            userId: user?.id_usuario,
-          }),
-        )
-
-        // Optimistically update UI
-        setSelectedSeats((prev) => [...prev, seatId])
-        setSeats((prevSeats) => prevSeats.map((s) => (s.id_asiento === seatId ? { ...s, estado: "seleccionado" } : s)))
-      }
-    },
-    [seats, selectedSeats, ticketCount, sendMessage, user],
-  )
+    () => {
+      console.log('handleSeatClick')
+    }
+  , [])
 
   const handleContinue = () => {
-    if (selectedSeats.length === ticketCount) {
-      // Store selection in sessionStorage for checkout
-      sessionStorage.setItem(
-        "reservation",
-        JSON.stringify({
-          funcionId: params.funcionId,
-          seatIds: selectedSeats,
-          ticketCount,
-        }),
-      )
-      router.push("/checkout")
-    }
+    
   }
 
   if (isLoading) {
@@ -163,16 +192,30 @@ export default function SeatSelectionPage() {
 
           <div className="mb-6">
             <h1 className="mb-2 text-balance text-3xl font-bold text-foreground md:text-4xl">
-              {funcionDetails.movie.titulo}
+              {funcionDetails.pelicula.titulo}
             </h1>
             <p className="text-muted-foreground">
-              {new Date(funcionDetails.funcion.fecha + "T00:00:00").toLocaleDateString("es-ES", {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}{" "}
-              - {funcionDetails.funcion.hora} | Sala {funcionDetails.sala.nombre}
+              {(() => {
+                const fechaHora = funcionDetails.funcion.fecha_hora
+                // Si ya es un timestamp ISO completo, usarlo directamente
+                const date = fechaHora.includes('T') 
+                  ? new Date(fechaHora) 
+                  : new Date(fechaHora + "T00:00:00")
+                const fechaFormateada = date.toLocaleDateString("es-ES", {
+                  weekday: "long",
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                  timeZone: "UTC"
+                })
+                const horaFormateada = date.toLocaleTimeString("es-ES", {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  hour12: false,
+                  timeZone: "UTC"
+                })
+                return `${fechaFormateada} - ${horaFormateada} | Sala ${funcionDetails.sala.nombre}`
+              })()}
             </p>
           </div>
 
@@ -194,16 +237,6 @@ export default function SeatSelectionPage() {
                         setTicketCount(Math.max(1, Math.min(10, value)))
                         // Clear selection if new count is less
                         if (selectedSeats.length > value) {
-                          const toRemove = selectedSeats.slice(value)
-                          toRemove.forEach((seatId) => {
-                            sendMessage(
-                              JSON.stringify({
-                                type: "release-seat",
-                                seatId,
-                                userId: user?.id_usuario,
-                              }),
-                            )
-                          })
                           setSelectedSeats((prev) => prev.slice(0, value))
                         }
                       }}
@@ -254,7 +287,7 @@ export default function SeatSelectionPage() {
                                 className="flex items-center gap-1 rounded-md bg-primary/10 px-3 py-1 text-sm font-medium text-primary"
                               >
                                 <Armchair className="h-3 w-3" />
-                                {seat?.fila}
+                                {/* {seat?.fila} */}
                                 {seat?.numero}
                               </div>
                             )

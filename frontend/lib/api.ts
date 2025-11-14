@@ -174,13 +174,14 @@ export const functionService = {
     return mapped;
   },
 
-  getSeats: (funcionId: string, token: string) =>
-    apiRequest<any[]>(
-      API_ENDPOINTS.SEATS.BY_FUNCTION(funcionId),
-      "GET",
-      undefined,
-      token
-    ),
+  getByIdGraphQL: async (id: string, token: string) => {
+    const data = await fetchGraphQL<{ funcion: any }>({
+      query: QUERIES.FUNCTION_BY_ID,
+      variables: { id },
+      token,
+    });
+    return data.funcion;
+  },
 };
 
 export const reservationService = {

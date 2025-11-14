@@ -35,12 +35,6 @@ export const API_ENDPOINTS = {
     UPDATE: (id: string) => `/reservas/${id}`,
     DELETE: (id: string) => `/reservas/${id}`,
   },
-  SEATS: {
-    BY_FUNCTION: (funcionId: string) => `/funciones/${funcionId}/asientos`,
-    CREATE: (funcionId: string) => `/funciones/${funcionId}/asientos`,
-    UPDATE: (funcionId: string, asientoId: string) => `/funciones/${funcionId}/asientos/${asientoId}`,
-    DELETE: (funcionId: string, asientoId: string) => `/funciones/${funcionId}/asientos/${asientoId}`,
-  },
   INCI: {
     LIST: '/incidencias',
     DETAIL: (id: string) => `/incidencias/${id}`,

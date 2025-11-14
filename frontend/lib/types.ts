@@ -36,7 +36,7 @@ export interface Sala {
 export interface Asiento {
   id_asiento: string
   id_sala: string
-  // fila: string
+  fila: string
   numero: number
   estado: "disponible" | "ocupado" | "seleccionado" | "en-proceso"
 }
