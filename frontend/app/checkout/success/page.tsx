@@ -12,25 +12,12 @@ export default function CheckoutSuccessPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const reservationId = searchParams.get("reservationId")
-  const [countdown, setCountdown] = useState(5)
 
   useEffect(() => {
     if (!reservationId) {
       router.push("/")
       return
     }
-
-    const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer)
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
-
-    return () => clearInterval(timer)
   }, [reservationId, router])
 
   if (!reservationId) {
@@ -72,12 +59,6 @@ export default function CheckoutSuccessPage() {
                 Volver al Inicio
               </Button>
             </div>
-
-            {countdown > 0 && (
-              <p className="mt-6 text-sm text-muted-foreground">
-                Serás redirigido a tus boletos en {countdown} segundo{countdown !== 1 ? "s" : ""}...
-              </p>
-            )}
           </CardContent>
         </Card>
       </main>
