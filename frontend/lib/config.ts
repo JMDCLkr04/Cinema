@@ -35,6 +35,13 @@ export const API_ENDPOINTS = {
     UPDATE: (id: string) => `/reservas/${id}`,
     DELETE: (id: string) => `/reservas/${id}`,
   },
+  SEATS: {
+    LIST: '/asientos',
+    DETAIL: (id: string) => `/asientos/${id}`,
+    CREATE: '/asientos',
+    UPDATE: (id: string) => `/asientos/${id}`,
+    DELETE: (id: string) => `/asientos/${id}`,
+  },
   INCI: {
     LIST: '/incidencias',
     DETAIL: (id: string) => `/incidencias/${id}`,
@@ -58,8 +65,7 @@ export const API_ENDPOINTS = {
   },
   ReservaAsiento: {
     LIST: (id: string) => `/reservas/${id}/asientos`,
-    CREATE: (id: string) => `/reservas/${id}/asientos`,
-    UPDATE: (id: string, asientoId: string) => `/reservas/${id}/asientos/${asientoId}`,
-    DELETE: (id: string, asientoId: string) => `/reservas/${id}/asientos/${asientoId}`,
+    CREATE: (reservaId: string, asientoId: string) => `/reservas/${reservaId}/asientos/${asientoId}`,
+    DELETE: (reservaId: string, asientoId: string) => `/reservas/${reservaId}/asientos/${asientoId}`,
   },
 };

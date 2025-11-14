@@ -11,7 +11,8 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Separator } from "@/components/ui/separator"
 import type { Pelicula, Funcion, Sala, Asiento } from "@/lib/types"
-import { Calendar, Clock, MapPin, CreditCard, Armchair, CheckCircle2 } from "lucide-react"
+import { Calendar, Clock, MapPin, CreditCard, Armchair, CheckCircle2, AlertCircle } from "lucide-react"
+import { seatService, reservationService } from "@/lib/api"
 
 interface ReservationData {
   funcionId: string
@@ -27,11 +28,12 @@ interface ReservationData {
 
 export default function CheckoutPage() {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, token } = useAuth()
   const [reservationData, setReservationData] = useState<ReservationData | null>(null)
   const [paymentMethod, setPaymentMethod] = useState<string>("credit-card")
   const [isProcessing, setIsProcessing] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     // Get reservation data from sessionStorage
@@ -61,14 +63,113 @@ export default function CheckoutPage() {
     }
   }, [router])
 
+  // Función auxiliar para convertir letra de fila a número (A=1, B=2, etc.)
+  const rowLetterToNumber = (letter: string): number => {
+    return letter.charCodeAt(0) - 64 // A=65, B=66, etc.
+  }
+
+  // Función auxiliar para calcular el número único del asiento
+  // Formula: numero = (fila - 1) * columnas + columna
+  const calculateSeatNumber = (fila: string, numero: number, columnas: number): number => {
+    const filaNum = rowLetterToNumber(fila)
+    return (filaNum - 1) * columnas + numero
+  }
+
   const handleConfirmPayment = async () => {
-    if (!reservationData || !user) return
+    if (!reservationData || !user || !token) {
+      setError("No hay información suficiente para procesar el pago")
+      return
+    }
+
     setIsProcessing(true)
-    // Redirect to success page
-    router.push(`/checkout/success?reservationId=${reservationData.funcionId}`)
-    // Clear reservation data
-    sessionStorage.removeItem("reservation")
-    setIsProcessing(false)
+    setError(null)
+
+    try {
+      const { checkoutData, seatIds, ticketCount, funcionId } = reservationData
+      const { sala, seats } = checkoutData
+
+      // Paso 1: Crear los asientos en la base de datos
+      const createdSeats = []
+      for (const seatId of seatIds) {
+        const seat = seats.find((s) => s.id_asiento === seatId)
+        if (!seat) {
+          throw new Error(`Asiento ${seatId} no encontrado`)
+        }
+
+        // Calcular el número único del asiento
+        const seatNumber = calculateSeatNumber(seat.fila, seat.numero, sala.columnas)
+
+        try {
+          // Crear el asiento en la base de datos
+          const createdSeat = await seatService.create(
+            {
+              numero: seatNumber,
+              estado: "ocupado",
+              id_sala: sala.id_sala,
+            },
+            token
+          )
+          createdSeats.push(createdSeat)
+        } catch (error) {
+          console.error(`Error al crear asiento ${seatId}:`, error)
+          // Si el asiento ya existe o hay un error, continuamos con el siguiente
+          // En producción, deberías manejar esto mejor (verificar si existe, actualizar, etc.)
+          throw new Error(
+            `Error al crear el asiento ${seat.fila}${seat.numero}: ${
+              error instanceof Error ? error.message : "Error desconocido"
+            }`
+          )
+        }
+      }
+
+      // Paso 2: Crear la reserva
+      const fechaReserva = new Date().toISOString()
+      const total = checkoutData.funcion.precio * ticketCount
+
+
+      console.log("user", user)
+      
+      const reservation = await reservationService.create(
+        {
+          cantidad_asientos: ticketCount,
+          estado: "confirmada",
+          id_funcion: funcionId,
+          id_usuario: user.id_usuario,
+          total: total,
+          fecha_reserva: fechaReserva,
+        },
+        token
+      )
+
+      // Paso 3: Vincular los asientos con la reserva
+      for (const createdSeat of createdSeats) {
+        try {
+          await reservationService.addSeat(
+            reservation.id_reserva,
+            createdSeat.id_asiento,
+            token
+          )
+        } catch (error) {
+          console.error(`Error al vincular asiento ${createdSeat.id_asiento} con la reserva:`, error)
+          // Si hay un error al vincular, continuamos con el siguiente asiento
+          // En producción, deberías manejar esto mejor (rollback, etc.)
+        }
+      }
+
+      // Paso 4: Limpiar los datos de sesión
+      sessionStorage.removeItem("reservation")
+
+      // Paso 5: Redirigir a la página de éxito con el ID de la reserva
+      router.push(`/checkout/success?reservationId=${reservation.id_reserva}`)
+    } catch (error) {
+      console.error("Error al procesar el pago:", error)
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Error al procesar el pago. Por favor intenta nuevamente."
+      )
+      setIsProcessing(false)
+    }
   }
 
   if (isLoading) {
@@ -257,6 +358,16 @@ export default function CheckoutPage() {
                       </div>
                     </RadioGroup>
                   </div>
+
+                  {/* Error Message */}
+                  {error && (
+                    <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4">
+                      <div className="flex items-center gap-2 text-destructive">
+                        <AlertCircle className="h-5 w-5" />
+                        <p className="font-medium">{error}</p>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>

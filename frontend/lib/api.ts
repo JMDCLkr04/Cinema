@@ -184,8 +184,31 @@ export const functionService = {
   },
 };
 
+export const seatService = {
+  create: (data: { numero: number; estado: string; id_sala: string }, token: string) =>
+    apiRequest<any>(API_ENDPOINTS.SEATS.CREATE, "POST", data, token),
+
+  getAll: (token: string) =>
+    apiRequest<any[]>(API_ENDPOINTS.SEATS.LIST, "GET", undefined, token),
+
+  getById: (id: string, token: string) =>
+    apiRequest<any>(
+      API_ENDPOINTS.SEATS.DETAIL(id),
+      "GET",
+      undefined,
+      token
+    ),
+};
+
 export const reservationService = {
-  create: (data: any, token: string) =>
+  create: (data: {
+    cantidad_asientos: number;
+    estado: string;
+    id_funcion: string;
+    id_usuario: string;
+    total: number;
+    fecha_reserva: string;
+  }, token: string) =>
     apiRequest<any>(API_ENDPOINTS.RESERVATIONS.CREATE, "POST", data, token),
 
   getAll: (token: string) =>
@@ -195,6 +218,14 @@ export const reservationService = {
     apiRequest<any>(
       API_ENDPOINTS.RESERVATIONS.DETAIL(id),
       "GET",
+      undefined,
+      token
+    ),
+
+  addSeat: (reservationId: string, seatId: string, token: string) =>
+    apiRequest<any>(
+      API_ENDPOINTS.ReservaAsiento.CREATE(reservationId, seatId),
+      "POST",
       undefined,
       token
     ),
