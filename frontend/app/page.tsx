@@ -118,7 +118,7 @@ export default function HomePage() {
   return (
     <main className="flex min-h-screen flex-col bg-background">
       <Header />
-      <div className="container py-8 px-4 md:px-6 lg:px-8">
+      <div className="container py-8 px-4 md:px-6 lg:px-8 w-full">
         <div className="mb-8">
           <h1 className="mb-2 text-4xl font-bold tracking-tight text-foreground md:text-5xl">
             Cartelera

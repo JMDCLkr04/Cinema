@@ -87,6 +87,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Restablecer estado
     setToken(null)
     setUser(null)
+    
+    // Redirigir a la página de login
+    window.location.href = "/login"
   }
 
   return (

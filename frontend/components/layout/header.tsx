@@ -21,8 +21,8 @@ export function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
-      <div className="container flex h-16 items-center justify-between">
+    <header className="sticky px-5 top-0 z-50 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+      <div className="container flex h-16 items-center justify-between w-full">
         <div className="flex items-center gap-6 md:gap-10">
           <Link href="/" className="flex items-center gap-2">
             <Film className="h-8 w-8 text-primary" />
