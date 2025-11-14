@@ -81,14 +81,11 @@ type Reserva {
 
 """Representa la relación entre una reserva y un asiento"""
 type ReservaAsiento {
-  """ID único de la relación reserva-asiento"""
-  id: ID!
-
   """ID de la reserva asociada"""
   id_reserva: String!
 
   """ID del asiento reservado"""
-  id_asiento: ID!
+  id_asiento: String!
 }
 
 type Factura {
