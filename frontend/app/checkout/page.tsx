@@ -10,27 +10,25 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Separator } from "@/components/ui/separator"
-import type { Movie, Funcion, Sala, Asiento } from "@/lib/types"
+import type { Pelicula, Funcion, Sala, Asiento } from "@/lib/types"
 import { Calendar, Clock, MapPin, CreditCard, Armchair, CheckCircle2 } from "lucide-react"
 
 interface ReservationData {
   funcionId: string
   seatIds: string[]
   ticketCount: number
-}
-
-interface CheckoutData {
-  funcion: Funcion
-  movie: Movie
-  sala: Sala
-  seats: Asiento[]
+  checkoutData: {
+    funcion: Funcion
+    pelicula: Pelicula
+    sala: Sala
+    seats: Asiento[]
+  }
 }
 
 export default function CheckoutPage() {
   const router = useRouter()
   const { user } = useAuth()
   const [reservationData, setReservationData] = useState<ReservationData | null>(null)
-  const [checkoutData, setCheckoutData] = useState<CheckoutData | null>(null)
   const [paymentMethod, setPaymentMethod] = useState<string>("credit-card")
   const [isProcessing, setIsProcessing] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -43,61 +41,34 @@ export default function CheckoutPage() {
       return
     }
 
-    const data: ReservationData = JSON.parse(storedData)
-    setReservationData(data)
-
-    // Fetch checkout details
-    const fetchCheckoutData = async () => {
-      try {
-        const response = await fetch(`/api/checkout/${data.funcionId}?seatIds=${data.seatIds.join(",")}`)
-        const checkoutInfo = await response.json()
-        setCheckoutData(checkoutInfo)
-      } catch (error) {
-        console.error("Error fetching checkout data:", error)
-      } finally {
-        setIsLoading(false)
+    try {
+      const data: ReservationData = JSON.parse(storedData)
+      
+      // Validar que los datos estén completos
+      if (!data.checkoutData || !data.funcionId || !data.seatIds || !data.ticketCount) {
+        console.error("Datos de reserva incompletos")
+        router.push("/")
+        return
       }
-    }
 
-    fetchCheckoutData()
+      setReservationData(data)
+    } catch (error) {
+      console.error("Error al parsear datos de reserva:", error)
+      router.push("/")
+      return
+    } finally {
+      setIsLoading(false)
+    }
   }, [router])
 
   const handleConfirmPayment = async () => {
-    if (!reservationData || !checkoutData || !user) return
-
+    if (!reservationData || !user) return
     setIsProcessing(true)
-
-    try {
-      // Create reservation
-      const response = await fetch("/api/reservations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id_usuario: user.id_usuario,
-          id_funcion: reservationData.funcionId,
-          seat_ids: reservationData.seatIds,
-          payment_method: paymentMethod,
-          total: checkoutData.funcion.precio * reservationData.ticketCount,
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error("Error al procesar la reserva")
-      }
-
-      const result = await response.json()
-
-      // Clear reservation data
-      sessionStorage.removeItem("reservation")
-
-      // Redirect to success page
-      router.push(`/checkout/success?reservationId=${result.reserva.id_reserva}`)
-    } catch (error) {
-      console.error("Error processing payment:", error)
-      alert("Error al procesar el pago. Por favor intenta nuevamente.")
-    } finally {
-      setIsProcessing(false)
-    }
+    // Redirect to success page
+    router.push(`/checkout/success?reservationId=${reservationData.funcionId}`)
+    // Clear reservation data
+    sessionStorage.removeItem("reservation")
+    setIsProcessing(false)
   }
 
   if (isLoading) {
@@ -108,7 +79,7 @@ export default function CheckoutPage() {
     )
   }
 
-  if (!reservationData || !checkoutData) {
+  if (!reservationData || !reservationData.checkoutData) {
     return (
       <div className="flex min-h-screen flex-col bg-background">
         <Header />
@@ -123,7 +94,66 @@ export default function CheckoutPage() {
     )
   }
 
+  const { checkoutData } = reservationData
   const total = checkoutData.funcion.precio * reservationData.ticketCount
+
+  // Función auxiliar para extraer solo la fecha (YYYY-MM-DD) de un timestamp
+  const extractDate = (fechaHora: string): string => {
+    if (fechaHora.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      return fechaHora
+    }
+    if (fechaHora.includes('T')) {
+      return fechaHora.split('T')[0]
+    }
+    const date = new Date(fechaHora)
+    const year = date.getUTCFullYear()
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0')
+    const day = String(date.getUTCDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
+
+  // Función auxiliar para formatear fecha en español
+  const formatDateSpanish = (dateString: string): string => {
+    if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const [year, month, day] = dateString.split('-').map(Number)
+      const date = new Date(Date.UTC(year, month - 1, day))
+      return date.toLocaleDateString("es-ES", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        timeZone: "UTC"
+      })
+    }
+    const date = new Date(dateString)
+    const year = date.getUTCFullYear()
+    const month = date.getUTCMonth()
+    const day = date.getUTCDate()
+    const utcDate = new Date(Date.UTC(year, month, day))
+    return utcDate.toLocaleDateString("es-ES", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      timeZone: "UTC"
+    })
+  }
+
+  // Función auxiliar para formatear hora
+  const formatTime = (fechaHora: string): string => {
+    const date = new Date(fechaHora)
+    return date.toLocaleTimeString("es-ES", {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+      timeZone: "UTC"
+    })
+  }
+
+  const fechaHora = checkoutData.funcion.fecha_hora
+  const fecha = extractDate(fechaHora)
+  const fechaFormateada = formatDateSpanish(fecha)
+  const horaFormateada = formatTime(fechaHora)
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -143,26 +173,19 @@ export default function CheckoutPage() {
                 <CardContent className="space-y-6">
                   {/* Movie Info */}
                   <div>
-                    <h3 className="mb-2 text-xl font-bold text-foreground">{checkoutData.movie.titulo}</h3>
+                    <h3 className="mb-2 text-xl font-bold text-foreground">{checkoutData.pelicula.titulo}</h3>
                     <div className="space-y-2 text-sm text-muted-foreground">
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4" />
-                        <span>
-                          {new Date(checkoutData.funcion.fecha + "T00:00:00").toLocaleDateString("es-ES", {
-                            weekday: "long",
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          })}
-                        </span>
+                        <span>{fechaFormateada}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4" />
-                        <span>{checkoutData.funcion.hora}</span>
+                        <span>{horaFormateada}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <MapPin className="h-4 w-4" />
-                        <span>{checkoutData.sala.nombre}</span>
+                        <span>Sala: {checkoutData.sala.nombre}</span>
                       </div>
                     </div>
                   </div>
@@ -247,7 +270,7 @@ export default function CheckoutPage() {
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Boletos ({reservationData.ticketCount})</span>
+                      <span className="text-muted-foreground">Boletos ( {reservationData.ticketCount} )</span>
                       <span className="font-medium text-foreground">${total.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
