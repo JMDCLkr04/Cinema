@@ -1,10 +1,18 @@
-import { Resolver, Query, Args } from '@nestjs/graphql';
+import { Resolver, Query, Args, ResolveField, Parent } from '@nestjs/graphql';
 import { FuncionesService } from './funciones.service';
 import { Funciones } from './entities/funcione.entity';
+import { PeliculasService } from '../peliculas/peliculas.service';
+import { SalasService } from '../salas/salas.service';
+import { Pelicula } from '../peliculas/entities/pelicula.entity';
+import { Sala } from '../salas/entities/sala.entity';
 
 @Resolver(() => Funciones)
 export class FuncionesResolver {
-  constructor(private readonly funcionesService: FuncionesService) {}
+  constructor(
+    private readonly funcionesService: FuncionesService,
+    private readonly peliculasService: PeliculasService,
+    private readonly salasService: SalasService,
+  ) {}
 
   @Query(() => [Funciones], { name: 'funciones' })
   async findAll() {
@@ -26,4 +34,31 @@ export class FuncionesResolver {
     }
   }
 
+  @ResolveField(() => [Pelicula], { name: 'peliculas' })
+  async resolvePeliculas(@Parent() funcion: Funciones): Promise<Pelicula[]> {
+    if (!funcion.id_pelicula) {
+      return [];
+    }
+    try {
+      const pelicula = await this.peliculasService.findOne(funcion.id_pelicula);
+      return pelicula ? [pelicula] : [];
+    } catch (error) {
+      console.error(`Error al resolver pelicula para funcion ${funcion.id_funcion}:`, error);
+      return [];
+    }
+  }
+
+  @ResolveField(() => [Sala], { name: 'salas' })
+  async resolveSalas(@Parent() funcion: Funciones): Promise<Sala[]> {
+    if (!funcion.id_sala) {
+      return [];
+    }
+    try {
+      const sala = await this.salasService.findOne(funcion.id_sala);
+      return sala ? [sala] : [];
+    } catch (error) {
+      console.error(`Error al resolver sala para funcion ${funcion.id_funcion}:`, error);
+      return [];
+    }
+  }
 }

@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { Funciones } from './entities/funcione.entity';
-import { Pelicula } from '../peliculas/entities/pelicula.entity';
 
 @Injectable()
 export class FuncionesService {
@@ -37,22 +36,26 @@ export class FuncionesService {
   async findAll(): Promise<Funciones[]> {
     const funciones = await this.handleRequest<any[]>('/funciones');
     return funciones.map(funcion => ({
-      id_funcion: funcion.id_funcion,
+      id_funcion: String(funcion.id_funcion),
       fecha_hora: funcion.fecha_hora || new Date().toISOString(),
       precio: parseFloat(funcion.precio) || 0,
-      peliculas: (funcion.peliculas || []) as Pelicula[],
-      salas: funcion.salas || [],
+      id_pelicula: funcion.id_pelicula ? String(funcion.id_pelicula) : undefined,
+      id_sala: funcion.id_sala ? String(funcion.id_sala) : undefined,
+      peliculas: [], // Se resuelve en el resolver
+      salas: [], // Se resuelve en el resolver
     }));
   }
 
   async findOne(id: string): Promise<Funciones> {
     const funcion = await this.handleRequest<any>(`/funciones/${id}`);
     return {
-      id_funcion: funcion.id_funcion,
+      id_funcion: String(funcion.id_funcion),
       fecha_hora: funcion.fecha_hora || new Date().toISOString(),
       precio: parseFloat(funcion.precio) || 0,
-      peliculas: (funcion.peliculas || []) as Pelicula[],
-      salas: funcion.salas || [],
+      id_pelicula: funcion.id_pelicula ? String(funcion.id_pelicula) : undefined,
+      id_sala: funcion.id_sala ? String(funcion.id_sala) : undefined,
+      peliculas: [], // Se resuelve en el resolver
+      salas: [], // Se resuelve en el resolver
     };
   }
 }

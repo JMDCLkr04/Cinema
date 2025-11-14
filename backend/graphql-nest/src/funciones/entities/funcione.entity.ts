@@ -1,4 +1,4 @@
-import { ObjectType, Field, Float } from '@nestjs/graphql';
+import { ObjectType, Field, Float, HideField } from '@nestjs/graphql';
 import { Pelicula } from 'src/peliculas/entities/pelicula.entity';
 import { Sala } from 'src/salas/entities/sala.entity';
 
@@ -12,6 +12,13 @@ export class Funciones {
 
   @Field(() => Float)
   precio: number;
+
+  // Campos internos para resolver relaciones (no se exponen en GraphQL)
+  @HideField()
+  id_pelicula?: string;
+
+  @HideField()
+  id_sala?: string;
 
   @Field(() => [Pelicula])
   peliculas: Pelicula[];

@@ -43,7 +43,6 @@ type Sala {
   estado: String!
   filas: Int!
   columnas: Int!
-  asientos: [Asiento!]!
 }
 
 type Funciones {
