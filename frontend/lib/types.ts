@@ -1,17 +1,15 @@
 export interface User {
   id_usuario: string
-  correo: string  // Changed from email to correo to match backend
   nombre: string
+  correo: string
   rol: "cliente" | "admin"
-  // Make email optional for backward compatibility
-  email?: string
 }
 
-export interface Movie {
+export interface Pelicula {
   id_pelicula: string
   titulo: string
-  descripcion: string
   genero: string
+  descripcion: string
   clasificacion: string
   duracion: number
   imagen_url: string
@@ -29,6 +27,8 @@ export interface Sala {
   id_sala: string
   nombre: string
   capacidad: number
+  tipo: string
+  estado: string
   filas: number
   columnas: number
 }
@@ -36,7 +36,7 @@ export interface Sala {
 export interface Asiento {
   id_asiento: string
   id_sala: string
-  fila: string
+  // fila: string
   numero: number
   estado: "disponible" | "ocupado" | "seleccionado" | "en-proceso"
 }
@@ -47,7 +47,8 @@ export interface Reserva {
   id_funcion: string
   fecha_reserva: string
   total: number
-  asientos: Asiento[]
+  cantidad_asientos: number
+  estado: string
 }
 
 export interface Factura {
@@ -55,5 +56,10 @@ export interface Factura {
   id_reserva: string
   total: number
   metodo_pago: string
-  fecha: string
+  fecha_emision: string
+}
+
+export interface ReservaAsiento {
+  id_reserva: string
+  id_asiento: string
 }
