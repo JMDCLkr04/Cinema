@@ -45,7 +45,7 @@ async def get_asientos_ocupados_por_funcion(id_funcion: str, db: Session = Depen
     
     return [{
         "id_asiento": str(a.id_asiento),
-        "numero": float(a.numero) if a.numero else None,
+        "numero": str(a.numero) if a.numero else None,
         "id_sala": str(a.id_sala) if a.id_sala else None,
         "estado": a.estado if a.estado else None
     } for a in asientos]

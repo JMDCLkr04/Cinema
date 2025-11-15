@@ -68,12 +68,7 @@ export default function CheckoutPage() {
     return letter.charCodeAt(0) - 64 // A=65, B=66, etc.
   }
 
-  // Función auxiliar para calcular el número único del asiento
-  // Formula: numero = (fila - 1) * columnas + columna
-  const calculateSeatNumber = (fila: string, numero: number, columnas: number): number => {
-    const filaNum = rowLetterToNumber(fila)
-    return (filaNum - 1) * columnas + numero
-  }
+  // Ya no necesitamos calculateSeatNumber porque numero ahora es un string como "A1", "A2", etc.
 
   const handleConfirmPayment = async () => {
     if (!reservationData || !user || !token) {
@@ -127,15 +122,12 @@ export default function CheckoutPage() {
           throw new Error(`Asiento ${seatId} no encontrado`)
         }
 
-        // Calcular el número único del asiento
-        const seatNumber = calculateSeatNumber(seat.fila, seat.numero, sala.columnas)
+        // El número del asiento ahora es un string como "A1", "A2", etc.
+        const seatNumber = seat.numero
 
         // Buscar si el asiento ya existe por número y sala
         let existingSeat = existingSeats.find(
-          (s: any) => 
-            s.numero === seatNumber || 
-            (typeof s.numero === 'string' && parseFloat(s.numero) === seatNumber) ||
-            (typeof s.numero === 'number' && s.numero === seatNumber)
+          (s: any) => String(s.numero) === String(seatNumber)
         )
 
         if (existingSeat) {
@@ -168,7 +160,7 @@ export default function CheckoutPage() {
           } catch (error) {
             console.error(`Error al crear asiento ${seatId}:`, error)
             throw new Error(
-              `Error al crear el asiento ${seat.fila}${seat.numero}: ${
+              `Error al crear el asiento ${seat.numero}: ${
                 error instanceof Error ? error.message : "Error desconocido"
               }`
             )
@@ -203,10 +195,7 @@ export default function CheckoutPage() {
 
         // Obtener la información del asiento original para mensajes de error
         const originalSeat = seats.find((s) => {
-          const seatNumber = calculateSeatNumber(s.fila, s.numero, sala.columnas)
-          const processedSeatNumber = processedSeat.numero || 
-            (typeof processedSeat.numero === 'string' ? parseFloat(processedSeat.numero) : processedSeat.numero)
-          return seatNumber === processedSeatNumber
+          return String(s.numero) === String(processedSeat.numero)
         })
 
         try {
@@ -414,7 +403,6 @@ export default function CheckoutPage() {
                         >
                           <Armchair className="h-4 w-4 text-primary" />
                           <span className="font-medium text-foreground">
-                            {seat.fila}
                             {seat.numero}
                           </span>
                         </div>

@@ -68,7 +68,7 @@ class Asiento(Base):
     __tablename__ = "asiento"
     
     id_asiento = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    numero = Column(Numeric, nullable=False)
+    numero = Column(Text, nullable=False)
     estado = Column(Text, nullable=True)
     id_sala = Column(UUID(as_uuid=True), ForeignKey("sala.id_sala"), nullable=True)
     

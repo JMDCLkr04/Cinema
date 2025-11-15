@@ -5,8 +5,8 @@ export class Asiento {
   @Field(() => String)
   id_asiento: string;
 
-  @Field(() => Int)
-  numero: number;
+  @Field(() => String)
+  numero: string;
 
   @Field(() => String)
   estado: string;

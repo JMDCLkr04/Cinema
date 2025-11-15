@@ -37,7 +37,7 @@ export class AsientosService {
     const asientos = await this.handleRequest<any[]>('/asientos');
     return asientos.map(asiento => ({
       id_asiento: asiento.id_asiento,
-      numero: parseInt(asiento.numero) || 0,
+      numero: String(asiento.numero) || '',
       estado: asiento.estado || 'disponible'
     }));
   }
@@ -46,7 +46,7 @@ export class AsientosService {
     const asiento = await this.handleRequest<any>(`/asientos/${id}`);
     return {
       id_asiento: asiento.id_asiento,
-      numero: parseInt(asiento.numero) || 0,
+      numero: String(asiento.numero) || '',
       estado: asiento.estado || 'disponible'
     };
   }

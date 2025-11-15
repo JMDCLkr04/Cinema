@@ -41,40 +41,22 @@ export default function SeatSelectionPage() {
     return letter.charCodeAt(0) - 64 // A=65, B=66, etc.
   }
 
-  // Función auxiliar para calcular el número único del asiento
-  // Formula: numero = (fila - 1) * columnas + columna
-  const calculateSeatNumber = (fila: string, numero: number, columnas: number): number => {
-    const filaNum = rowLetterToNumber(fila)
-    return (filaNum - 1) * columnas + numero
-  }
-
-  // Función auxiliar para convertir número único del asiento a fila y columna
-  // Inversa de calculateSeatNumber
-  const seatNumberToPosition = (seatNumber: number, columnas: number): { fila: string; columna: number } => {
-    const filaNum = Math.ceil(seatNumber / columnas)
-    const columna = ((seatNumber - 1) % columnas) + 1
-    return {
-      fila: numberToRowLetter(filaNum),
-      columna: columna
-    }
-  }
-
   // Función auxiliar para generar asientos basados en filas y columnas
   const generateSeats = (sala: Sala): Asiento[] => {
     const asientos: Asiento[] = []
-    let seatNumber = 1
     
     for (let fila = 1; fila <= sala.filas; fila++) {
       const filaLetter = numberToRowLetter(fila)
       for (let columna = 1; columna <= sala.columnas; columna++) {
+        // El número del asiento ahora es un string como "A1", "A2", etc.
+        const numeroAsiento = `${filaLetter}${columna}`
         asientos.push({
           id_asiento: `${sala.id_sala}-${filaLetter}-${columna}`, // ID temporal basado en posición
           id_sala: sala.id_sala,
           fila: filaLetter,
-          numero: columna,
+          numero: numeroAsiento,
           estado: "disponible" as const,
         })
-        seatNumber++
       }
     }
     
@@ -153,21 +135,18 @@ export default function SeatSelectionPage() {
         try {
           const occupiedSeatsData = await functionService.getOccupiedSeats(funcionId, token)
           
-          // Crear un mapa de números de asiento ocupados
-          const occupiedSeatNumbers = new Set<number>()
+          // Crear un mapa de números de asiento ocupados (ahora son strings como "A1", "A2", etc.)
+          const occupiedSeatNumbers = new Set<string>()
           occupiedSeatsData.forEach((seat: any) => {
             if (seat.numero !== null && seat.numero !== undefined) {
-              const seatNum = typeof seat.numero === 'string' ? parseFloat(seat.numero) : seat.numero
-              if (!isNaN(seatNum)) {
-                occupiedSeatNumbers.add(seatNum)
-              }
+              const seatNum = String(seat.numero)
+              occupiedSeatNumbers.add(seatNum)
             }
           })
           
           // Marcar los asientos ocupados en el grid
           const asientosActualizados = asientos.map((asiento) => {
-            const seatNumber = calculateSeatNumber(asiento.fila, asiento.numero, sala.columnas)
-            if (occupiedSeatNumbers.has(seatNumber)) {
+            if (occupiedSeatNumbers.has(asiento.numero)) {
               return { ...asiento, estado: "ocupado" as const }
             }
             return asiento
@@ -408,7 +387,7 @@ export default function SeatSelectionPage() {
                                 className="flex items-center gap-1 rounded-md bg-primary/10 px-3 py-1 text-sm font-medium text-primary"
                               >
                                 <Armchair className="h-3 w-3" />
-                                {seat.fila}{seat.numero}
+                                {seat.numero}
                               </div>
                             )
                           })}

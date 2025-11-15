@@ -4,7 +4,7 @@
 
 type Asiento {
   id_asiento: String!
-  numero: Int!
+  numero: String!
   estado: String!
 }
 

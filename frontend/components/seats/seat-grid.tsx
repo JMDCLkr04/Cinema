@@ -32,7 +32,13 @@ export function SeatGrid({ seats, selectedSeats, onSeatClick }: SeatGridProps) {
           <span className="w-8 text-center text-sm font-medium text-muted-foreground">{row}</span>
           <div className="flex flex-1 flex-wrap justify-center gap-2">
             {seatsByRow[row]
-              .sort((a, b) => a.numero - b.numero)
+              .sort((a, b) => {
+                // Ordenar por número de asiento (strings como "A1", "A2", etc.)
+                // Extraer el número de la cadena para ordenar correctamente
+                const numA = parseInt(a.numero.replace(/[^0-9]/g, '')) || 0
+                const numB = parseInt(b.numero.replace(/[^0-9]/g, '')) || 0
+                return numA - numB
+              })
               .map((seat) => {
                 const isSelected = selectedSeats.includes(seat.id_asiento)
                 const isAvailable = seat.estado === "disponible"

@@ -238,7 +238,7 @@ export const functionService = {
 };
 
 export const seatService = {
-  create: (data: { numero: number; estado: string; id_sala: string }, token: string) =>
+  create: (data: { numero: string; estado: string; id_sala: string }, token: string) =>
     apiRequest<any>(API_ENDPOINTS.SEATS.CREATE, "POST", data, token),
 
   getAll: (token: string) =>
@@ -252,7 +252,7 @@ export const seatService = {
       token
     ),
 
-  update: (id: string, data: { numero?: number; estado?: string; id_sala?: string }, token: string) =>
+  update: (id: string, data: { numero?: string; estado?: string; id_sala?: string }, token: string) =>
     apiRequest<any>(API_ENDPOINTS.SEATS.UPDATE(id), "PUT", data, token),
 };
 
