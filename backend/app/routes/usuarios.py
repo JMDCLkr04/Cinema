@@ -33,6 +33,8 @@ def get_usuario(
 @router.get("/usuarios/me", response_model=UsuarioResponse)
 def get_current_usuario(current_user: Usuario = Depends(get_current_active_user)):
     """Obtener datos del usuario actual"""
+    # El UsuarioResponse ya excluye el password automáticamente por no estar en el schema
+    # Pero asegurémonos de que se serialice correctamente
     return current_user
 
 @router.put("/usuarios/{id_usuario}", response_model=UsuarioResponse)

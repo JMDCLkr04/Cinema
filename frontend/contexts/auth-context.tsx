@@ -36,10 +36,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const { token, user } = await authService.login(email, password)
       
-      // Almacenar token
+      console.log("Login successful, token:", token)
+      console.log("User data:", user)
+
+      // Almacenar token en localStorage (persiste entre recargas de página)
       localStorage.setItem("token", token)
       
-      // Create user data object with the correct structure
+      // Crear objeto de usuario con la estructura correcta
       const userData: User = {
         id_usuario: (user as any).id_usuario || (user as any).id || '',
         correo: (user as any).correo || email,
@@ -47,9 +50,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         rol: (user as any).rol || 'cliente',
       };
       
+      // Guardar usuario en localStorage (persiste entre recargas)
       localStorage.setItem("user", JSON.stringify(userData))
       
-      // Update state
+      // Actualizar estado de React
       setToken(token)
       setUser(userData)
     } catch (error) {

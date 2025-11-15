@@ -12,7 +12,7 @@ export const API_ENDPOINTS = {
   AUTH: {
     LOGIN: '/auth/login',
     REGISTER: '/auth/register',
-    PROFILE: '/usuarios/me',
+    PROFILE: '/usuarios',
   },
   MOVIES: {
     LIST: '/peliculas',

@@ -12,7 +12,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Separator } from "@/components/ui/separator"
 import type { Pelicula, Funcion, Sala, Asiento } from "@/lib/types"
 import { Calendar, Clock, MapPin, CreditCard, Armchair, CheckCircle2, AlertCircle } from "lucide-react"
-import { seatService, reservationService } from "@/lib/api"
+import { seatService, reservationService, authService } from "@/lib/api"
 
 interface ReservationData {
   funcionId: string
@@ -122,26 +122,44 @@ export default function CheckoutPage() {
         }
       }
 
-      // Paso 2: Crear la reserva
+      // Paso 2: Obtener el ID del usuario (obtener del perfil si no está disponible)
+      let idUsuario = user.id_usuario
+      
+      // Si el usuario no tiene id_usuario, obtenerlo del perfil
+      if (!idUsuario || idUsuario.trim() === '') {
+        try {
+          const profile = await authService.getProfile(token)
+          console.log("profile", profile)
+          idUsuario = profile.id_usuario || profile.id || ''
+          
+          if (!idUsuario || idUsuario.trim() === '') {
+            throw new Error("No se pudo obtener el ID del usuario desde el perfil")
+          }
+        } catch (error) {
+          console.error("Error al obtener el perfil del usuario:", error)
+          setError("Error al obtener la información del usuario. Por favor, intenta iniciar sesión nuevamente.")
+          setIsProcessing(false)
+          return
+        }
+      }
+
+      // Paso 3: Crear la reserva
       const fechaReserva = new Date().toISOString()
       const total = checkoutData.funcion.precio * ticketCount
 
-
-      console.log("user", user)
-      
       const reservation = await reservationService.create(
         {
           cantidad_asientos: ticketCount,
           estado: "confirmada",
           id_funcion: funcionId,
-          id_usuario: user.id_usuario,
+          id_usuario: idUsuario,
           total: total,
           fecha_reserva: fechaReserva,
         },
         token
       )
 
-      // Paso 3: Vincular los asientos con la reserva
+      // Paso 4: Vincular los asientos con la reserva
       for (const createdSeat of createdSeats) {
         try {
           await reservationService.addSeat(
@@ -156,10 +174,10 @@ export default function CheckoutPage() {
         }
       }
 
-      // Paso 4: Limpiar los datos de sesión
+      // Paso 5: Limpiar los datos de sesión
       sessionStorage.removeItem("reservation")
 
-      // Paso 5: Redirigir a la página de éxito con el ID de la reserva
+      // Paso 6: Redirigir a la página de éxito con el ID de la reserva
       router.push(`/checkout/success?reservationId=${reservation.id_reserva}`)
     } catch (error) {
       console.error("Error al procesar el pago:", error)

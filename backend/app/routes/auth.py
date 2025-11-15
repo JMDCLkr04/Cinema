@@ -2,6 +2,7 @@ from datetime import timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
 from app.database import get_db
 from app.models import Usuario
 from app.schemas import UsuarioCreate, UsuarioResponse, UsuarioLogin, Token
@@ -13,6 +14,12 @@ from app.services.auth_service import (
 from app.config import settings
 
 router = APIRouter()
+
+# Schema para respuesta de login con usuario
+class LoginResponse(BaseModel):
+    access_token: str
+    token_type: str
+    user: UsuarioResponse
 
 @router.post("/auth/register", response_model=UsuarioResponse, status_code=status.HTTP_201_CREATED)
 def register(usuario: UsuarioCreate, db: Session = Depends(get_db)):
@@ -78,9 +85,9 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     
     return {"access_token": access_token, "token_type": "bearer"}
 
-@router.post("/auth/login-json", response_model=Token)
+@router.post("/auth/login-json", response_model=LoginResponse)
 def login_json(usuario: UsuarioLogin, db: Session = Depends(get_db)):
-    """Login alternativo que acepta JSON en lugar de form-data"""
+    """Login alternativo que acepta JSON en lugar de form-data y retorna datos del usuario"""
     usuario_db = authenticate_user(db, usuario.correo, usuario.password)
     
     if not usuario_db:
@@ -95,4 +102,9 @@ def login_json(usuario: UsuarioLogin, db: Session = Depends(get_db)):
         data={"sub": usuario_db.correo}, expires_delta=access_token_expires
     )
     
-    return {"access_token": access_token, "token_type": "bearer"}
+    # Retornar token junto con los datos del usuario (sin password)
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": usuario_db  # UsuarioResponse se encargará de excluir el password automáticamente
+    }
