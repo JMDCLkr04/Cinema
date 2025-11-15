@@ -287,6 +287,38 @@ export const reservationService = {
     ),
 };
 
+export const facturaService = {
+  create: (data: {
+    fecha_emision: string;
+    total: number;
+    metodo_pago: string;
+    id_reserva: string;
+  }, token: string) =>
+    apiRequest<any>(API_ENDPOINTS.FACTURAS.CREATE, "POST", data, token),
+
+  getAll: (token: string) =>
+    apiRequest<any[]>(API_ENDPOINTS.FACTURAS.LIST, "GET", undefined, token),
+
+  getById: (id: string, token: string) =>
+    apiRequest<any>(
+      API_ENDPOINTS.FACTURAS.DETAIL(id),
+      "GET",
+      undefined,
+      token
+    ),
+
+  update: (id: string, data: {
+    fecha_emision?: string;
+    total?: number;
+    metodo_pago?: string;
+    id_reserva?: string;
+  }, token: string) =>
+    apiRequest<any>(API_ENDPOINTS.FACTURAS.UPDATE(id), "PUT", data, token),
+
+  delete: (id: string, token: string) =>
+    apiRequest<void>(API_ENDPOINTS.FACTURAS.DELETE(id), "DELETE", undefined, token),
+};
+
 // Servicio de usuarios (requiere autenticación)
 export const usuarioService = {
   getAll: (skip: number = 0, limit: number = 100, token?: string | null) =>

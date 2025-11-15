@@ -12,7 +12,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Separator } from "@/components/ui/separator"
 import type { Pelicula, Funcion, Sala, Asiento } from "@/lib/types"
 import { Calendar, Clock, MapPin, CreditCard, Armchair, CheckCircle2, AlertCircle } from "lucide-react"
-import { seatService, reservationService, authService } from "@/lib/api"
+import { seatService, reservationService, authService, facturaService } from "@/lib/api"
 
 interface ReservationData {
   funcionId: string
@@ -238,10 +238,38 @@ export default function CheckoutPage() {
         }
       }
 
-      // Paso 6: Limpiar los datos de sesión
+      // Paso 6: Crear la factura
+      const fechaEmision = new Date().toISOString()
+      // Mapear el método de pago a un formato más descriptivo
+      const metodoPagoMap: Record<string, string> = {
+        "credit-card": "Tarjeta de Crédito/Débito",
+        "paypal": "PayPal",
+        "cash": "Efectivo en Taquilla"
+      }
+      const metodoPagoDescriptivo = metodoPagoMap[paymentMethod] || paymentMethod
+
+      try {
+        const factura = await facturaService.create(
+          {
+            fecha_emision: fechaEmision,
+            total: total,
+            metodo_pago: metodoPagoDescriptivo,
+            id_reserva: reservation.id_reserva,
+          },
+          token
+        )
+        console.log("Factura creada exitosamente:", factura)
+      } catch (error) {
+        console.error("Error al crear la factura:", error)
+        // No lanzar error, ya que la reserva se creó exitosamente
+        // La factura puede crearse después manualmente si es necesario
+        console.warn("La reserva se creó pero no se pudo generar la factura. Se puede crear manualmente después.")
+      }
+
+      // Paso 7: Limpiar los datos de sesión
       sessionStorage.removeItem("reservation")
 
-      // Paso 7: Redirigir a la página de éxito con el ID de la reserva
+      // Paso 8: Redirigir a la página de éxito con el ID de la reserva
       router.push(`/checkout/success?reservationId=${reservation.id_reserva}`)
     } catch (error) {
       console.error("Error al procesar el pago:", error)
