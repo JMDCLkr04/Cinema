@@ -63,3 +63,12 @@ export interface ReservaAsiento {
   id_reserva: string
   id_asiento: string
 }
+
+export interface AdminStats {
+  totalMovies: number
+  totalReservations: number
+  totalCustomers: number
+  totalAdmins: number
+  totalFunctions: number
+  totalHalls: number
+}

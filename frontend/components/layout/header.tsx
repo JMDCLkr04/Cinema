@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
-import { Film, Ticket, LogOut, LogIn, UserPlus } from "lucide-react"
+import { Film, Ticket, LogOut, LogIn, UserPlus, LayoutGrid } from "lucide-react"
 
 export function Header() {
   const { user, logout, isLoading } = useAuth()
@@ -33,6 +33,14 @@ export function Header() {
         <nav className="flex items-center gap-2">
           {user ? (
             <>
+              {user.rol === "admin" && (
+                  <Link href="/admin">
+                    <Button variant="ghost" className="gap-2">
+                      <LayoutGrid className="h-4 w-4" />
+                      <span className="hidden sm:inline">Administrar</span>
+                    </Button>
+                  </Link>
+              )}
               <Link href="/orders">
                 <Button variant="ghost" className="gap-2">
                   <Ticket className="h-4 w-4" />
