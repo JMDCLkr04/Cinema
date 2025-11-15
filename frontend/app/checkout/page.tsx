@@ -88,41 +88,7 @@ export default function CheckoutPage() {
       const { checkoutData, seatIds, ticketCount, funcionId } = reservationData
       const { sala, seats } = checkoutData
 
-      // Paso 1: Crear los asientos en la base de datos
-      const createdSeats = []
-      for (const seatId of seatIds) {
-        const seat = seats.find((s) => s.id_asiento === seatId)
-        if (!seat) {
-          throw new Error(`Asiento ${seatId} no encontrado`)
-        }
-
-        // Calcular el número único del asiento
-        const seatNumber = calculateSeatNumber(seat.fila, seat.numero, sala.columnas)
-
-        try {
-          // Crear el asiento en la base de datos
-          const createdSeat = await seatService.create(
-            {
-              numero: seatNumber,
-              estado: "ocupado",
-              id_sala: sala.id_sala,
-            },
-            token
-          )
-          createdSeats.push(createdSeat)
-        } catch (error) {
-          console.error(`Error al crear asiento ${seatId}:`, error)
-          // Si el asiento ya existe o hay un error, continuamos con el siguiente
-          // En producción, deberías manejar esto mejor (verificar si existe, actualizar, etc.)
-          throw new Error(
-            `Error al crear el asiento ${seat.fila}${seat.numero}: ${
-              error instanceof Error ? error.message : "Error desconocido"
-            }`
-          )
-        }
-      }
-
-      // Paso 2: Obtener el ID del usuario (obtener del perfil si no está disponible)
+      // Paso 1: Obtener el ID del usuario (obtener del perfil si no está disponible)
       let idUsuario = user.id_usuario
       
       // Si el usuario no tiene id_usuario, obtenerlo del perfil
@@ -143,7 +109,74 @@ export default function CheckoutPage() {
         }
       }
 
-      // Paso 3: Crear la reserva
+      // Paso 2: Obtener todos los asientos de la sala para verificar cuáles existen
+      let existingSeats: any[] = []
+      try {
+        const allSeats = await seatService.getAll(token)
+        // Filtrar solo los asientos de esta sala
+        existingSeats = allSeats.filter((s: any) => s.id_sala === sala.id_sala)
+      } catch (error) {
+        console.warn("No se pudieron obtener los asientos existentes, continuando...", error)
+      }
+
+      // Paso 3: Crear o obtener los asientos seleccionados
+      const processedSeats = []
+      for (const seatId of seatIds) {
+        const seat = seats.find((s) => s.id_asiento === seatId)
+        if (!seat) {
+          throw new Error(`Asiento ${seatId} no encontrado`)
+        }
+
+        // Calcular el número único del asiento
+        const seatNumber = calculateSeatNumber(seat.fila, seat.numero, sala.columnas)
+
+        // Buscar si el asiento ya existe por número y sala
+        let existingSeat = existingSeats.find(
+          (s: any) => 
+            s.numero === seatNumber || 
+            (typeof s.numero === 'string' && parseFloat(s.numero) === seatNumber) ||
+            (typeof s.numero === 'number' && s.numero === seatNumber)
+        )
+
+        if (existingSeat) {
+          // Si el asiento existe, actualizar su estado a "ocupado"
+          try {
+            const updatedSeat = await seatService.update(
+              existingSeat.id_asiento,
+              {
+                estado: "ocupado",
+              },
+              token
+            )
+            processedSeats.push(updatedSeat || existingSeat)
+          } catch (error) {
+            console.warn(`No se pudo actualizar el asiento ${existingSeat.id_asiento}, usando el existente`, error)
+            processedSeats.push(existingSeat)
+          }
+        } else {
+          // Si el asiento no existe, crearlo
+          try {
+            const createdSeat = await seatService.create(
+              {
+                numero: seatNumber,
+                estado: "ocupado",
+                id_sala: sala.id_sala,
+              },
+              token
+            )
+            processedSeats.push(createdSeat)
+          } catch (error) {
+            console.error(`Error al crear asiento ${seatId}:`, error)
+            throw new Error(
+              `Error al crear el asiento ${seat.fila}${seat.numero}: ${
+                error instanceof Error ? error.message : "Error desconocido"
+              }`
+            )
+          }
+        }
+      }
+
+      // Paso 4: Crear la reserva
       const fechaReserva = new Date().toISOString()
       const total = checkoutData.funcion.precio * ticketCount
 
@@ -159,25 +192,56 @@ export default function CheckoutPage() {
         token
       )
 
-      // Paso 4: Vincular los asientos con la reserva
-      for (const createdSeat of createdSeats) {
+      // Paso 5: Vincular los asientos con la reserva (crear relaciones en reserva_asiento)
+      for (let i = 0; i < processedSeats.length; i++) {
+        const processedSeat = processedSeats[i]
+        const seatId = processedSeat.id_asiento || processedSeat.id
+        if (!seatId) {
+          console.error("Asiento sin ID:", processedSeat)
+          continue
+        }
+
+        // Obtener la información del asiento original para mensajes de error
+        const originalSeat = seats.find((s) => {
+          const seatNumber = calculateSeatNumber(s.fila, s.numero, sala.columnas)
+          const processedSeatNumber = processedSeat.numero || 
+            (typeof processedSeat.numero === 'string' ? parseFloat(processedSeat.numero) : processedSeat.numero)
+          return seatNumber === processedSeatNumber
+        })
+
         try {
           await reservationService.addSeat(
             reservation.id_reserva,
-            createdSeat.id_asiento,
+            seatId,
             token
           )
-        } catch (error) {
-          console.error(`Error al vincular asiento ${createdSeat.id_asiento} con la reserva:`, error)
-          // Si hay un error al vincular, continuamos con el siguiente asiento
-          // En producción, deberías manejar esto mejor (rollback, etc.)
+        } catch (error: any) {
+          // Si el error es que el asiento ya está en la reserva, continuar
+          if (error?.message?.includes("ya está en esta reserva")) {
+            console.warn(`Asiento ${seatId} ya está vinculado a la reserva`)
+            continue
+          }
+          // Si el error es que el asiento ya está en otra reserva, es un problema
+          if (error?.message?.includes("ya está reservado en otra reserva")) {
+            const seatInfo = originalSeat ? `${originalSeat.fila}${originalSeat.numero}` : seatId
+            throw new Error(
+              `El asiento ${seatInfo} ya está reservado. Por favor, selecciona otros asientos.`
+            )
+          }
+          console.error(`Error al vincular asiento ${seatId} con la reserva:`, error)
+          const seatInfo = originalSeat ? `${originalSeat.fila}${originalSeat.numero}` : seatId
+          throw new Error(
+            `Error al vincular el asiento ${seatInfo} con la reserva: ${
+              error instanceof Error ? error.message : "Error desconocido"
+            }`
+          )
         }
       }
 
-      // Paso 5: Limpiar los datos de sesión
+      // Paso 6: Limpiar los datos de sesión
       sessionStorage.removeItem("reservation")
 
-      // Paso 6: Redirigir a la página de éxito con el ID de la reserva
+      // Paso 7: Redirigir a la página de éxito con el ID de la reserva
       router.push(`/checkout/success?reservationId=${reservation.id_reserva}`)
     } catch (error) {
       console.error("Error al procesar el pago:", error)

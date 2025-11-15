@@ -87,8 +87,9 @@ async def agregar_asiento_a_reserva(
     # Obtener el asiento para incluirlo en la respuesta
     asiento = db.query(Asiento).filter(Asiento.id_asiento == id_asiento).first()
     
+    # Como ReservaAsiento tiene clave primaria compuesta, no tiene un campo 'id' único
+    # Usamos una combinación de ambos IDs como identificador
     return {
-        "id": reserva_asiento.id,
         "id_reserva": str(reserva_asiento.id_reserva),
         "id_asiento": str(reserva_asiento.id_asiento),
         "numero_asiento": asiento.numero if asiento else None,

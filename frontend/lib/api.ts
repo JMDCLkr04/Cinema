@@ -243,6 +243,9 @@ export const seatService = {
       undefined,
       token
     ),
+
+  update: (id: string, data: { numero?: number; estado?: string; id_sala?: string }, token: string) =>
+    apiRequest<any>(API_ENDPOINTS.SEATS.UPDATE(id), "PUT", data, token),
 };
 
 export const reservationService = {
