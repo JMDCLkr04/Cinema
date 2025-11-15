@@ -154,37 +154,37 @@ export default function AdminPage() {
                   title="Películas"
                   value={stats.totalMovies}
                   icon={Film}
-                  color="from-blue-500 to-blue-600"
+                  color="from-orange-800 to-orange-600"
                 />
                 <StatCard
                   title="Reservas"
                   value={stats.totalReservations}
                   icon={Ticket}
-                  color="from-purple-500 to-purple-600"
+                  color="from-orange-800 to-orange-600"
                 />
                 <StatCard
                   title="Clientes"
                   value={stats.totalCustomers}
                   icon={Users}
-                  color="from-green-500 to-green-600"
+                  color="from-orange-800 to-orange-600"
                 />
                 <StatCard
                   title="Administradores"
                   value={stats.totalAdmins}
                   icon={User}
-                  color="from-orange-500 to-orange-600"
+                  color="from-orange-800 to-orange-600"
                 />
                 <StatCard
                   title="Funciones"
                   value={stats.totalFunctions}
                   icon={Clock}
-                  color="from-pink-500 to-pink-600"
+                  color="from-orange-800 to-orange-600"
                 />
                 <StatCard
                   title="Salas Disponibles"
                   value={stats.totalSalas}
                   icon={DoorOpen}
-                  color="from-cyan-500 to-cyan-600"
+                  color="from-orange-800 to-orange-600"
                 />
               </div>
             ) : (
