@@ -6,10 +6,12 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
@@ -242,10 +244,41 @@ func wsHandler(hub *Hub, w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	// Obtener DATABASE_URL del entorno
+	// Cargar variables de entorno desde .env si existe
+	// Busca el .env en varios lugares posibles:
+	envPaths := []string{
+		".env",                            // Directorio actual (websocket-go/)
+		filepath.Join("..", ".env"),       // Directorio backend/
+		filepath.Join("..", "..", ".env"), // Directorio raíz del proyecto
+	}
+
+	var envLoaded bool
+	for _, envPath := range envPaths {
+		if _, err := os.Stat(envPath); err == nil {
+			if err := godotenv.Load(envPath); err == nil {
+				log.Printf("Variables de entorno cargadas desde: %s", envPath)
+				envLoaded = true
+				break
+			}
+		}
+	}
+
+	// Si no se encontró ningún .env, intentar cargar desde el directorio actual
+	if !envLoaded {
+		if err := godotenv.Load(); err == nil {
+			log.Println("Variables de entorno cargadas desde .env (directorio actual)")
+			envLoaded = true
+		}
+	}
+
+	if !envLoaded {
+		log.Println("Advertencia: No se encontró archivo .env. Usando variables de entorno del sistema.")
+	}
+
+	// Obtener DATABASE_URL del entorno (ahora puede venir del .env)
 	databaseURL := os.Getenv("DATABASE_URL")
 	if databaseURL == "" {
-		log.Fatal("DATABASE_URL no está configurada. Por favor, configura la variable de entorno DATABASE_URL")
+		log.Fatal("DATABASE_URL no está configurada. Por favor, configura la variable de entorno DATABASE_URL o agrégala al archivo .env")
 	}
 
 	// Conectar a la base de datos
