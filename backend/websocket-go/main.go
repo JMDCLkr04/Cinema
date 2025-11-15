@@ -31,7 +31,7 @@ type AdminStats struct {
 	TotalCustomers    int `json:"totalCustomers"`
 	TotalAdmins       int `json:"totalAdmins"`
 	TotalFunctions    int `json:"totalFunctions"`
-	TotalHalls        int `json:"totalHalls"`
+	TotalSalas        int `json:"totalSalas"`
 }
 
 // Hub mantiene las conexiones activas de los clientes
@@ -145,6 +145,9 @@ func (h *Hub) broadcastStats() {
 		return
 	}
 
+	// Log del JSON que se envía
+	log.Printf("Enviando JSON: %s", string(message))
+
 	h.broadcast <- message
 }
 
@@ -199,15 +202,34 @@ func (h *Hub) getStats() (*AdminStats, error) {
 		return nil, err
 	}
 
+	// Debug: Ver qué valores tiene la columna estado en sala
+	var estadoDebug string
+	_ = h.db.QueryRow(`SELECT estado FROM sala LIMIT 1`).Scan(&estadoDebug)
+	log.Printf("Debug - Valor de estado en sala (primer registro): '%s' (bytes: %v)", estadoDebug, []byte(estadoDebug))
+
 	// Número de salas disponibles (salas con estado 'disponible' o NULL)
+	// Usamos LOWER() para hacer la comparación case-insensitive y TRIM para eliminar espacios
+	var totalSalasRaw int
 	err = h.db.QueryRow(`
 		SELECT COUNT(*) 
 		FROM sala 
-		WHERE estado IS NULL OR estado = 'disponible'
-	`).Scan(&stats.TotalHalls)
+		WHERE estado IS NULL OR LOWER(TRIM(estado)) = 'disponible'
+	`).Scan(&totalSalasRaw)
 	if err != nil {
+		log.Printf("Error al obtener salas disponibles: %v", err)
 		return nil, err
 	}
+
+	// También obtener el total de salas sin filtrar para debugging
+	var totalSalasAll int
+	_ = h.db.QueryRow(`SELECT COUNT(*) FROM sala`).Scan(&totalSalasAll)
+
+	stats.TotalSalas = totalSalasRaw
+	log.Printf("Debug - Total salas: %d, Salas disponibles: %d", totalSalasAll, totalSalasRaw)
+
+	// Log para debugging
+	log.Printf("Estadísticas obtenidas: Películas=%d, Reservas=%d, Clientes=%d, Admins=%d, Funciones=%d, Salas=%d",
+		stats.TotalMovies, stats.TotalReservations, stats.TotalCustomers, stats.TotalAdmins, stats.TotalFunctions, stats.TotalSalas)
 
 	return stats, nil
 }

@@ -43,6 +43,8 @@ export default function AdminPage() {
         ws.onmessage = (event) => {
           try {
             const data: AdminStats = JSON.parse(event.data);
+            console.log("Datos recibidos del WebSocket:", data);
+            console.log("totalSalas:", data.totalSalas);
             setStats(data);
             setIsLoadingStats(false);
           } catch (error) {
@@ -102,6 +104,14 @@ export default function AdminPage() {
       }
     };
   }, [user]);
+
+  console.log(WEBSOCKET_URL);
+  console.log(isConnected);
+  console.log(isLoadingStats);
+  console.log(stats);
+  console.log(user);
+  console.log(wsRef.current);
+  console.log(reconnectTimeoutRef.current);
 
   return (
     <AdminRoute>
@@ -172,7 +182,7 @@ export default function AdminPage() {
                 />
                 <StatCard
                   title="Salas Disponibles"
-                  value={stats.totalHalls}
+                  value={stats.totalSalas}
                   icon={DoorOpen}
                   color="from-cyan-500 to-cyan-600"
                 />

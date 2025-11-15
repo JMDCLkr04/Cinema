@@ -70,5 +70,5 @@ export interface AdminStats {
   totalCustomers: number
   totalAdmins: number
   totalFunctions: number
-  totalHalls: number
+  totalSalas: number
 }

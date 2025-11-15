@@ -9,6 +9,8 @@ interface StatCardProps {
 }
 
 export function StatCard({ title, value, icon: Icon, color }: StatCardProps) {
+  const displayValue = typeof value === "number" ? value : 0;
+  
   return (
     <Card className="group relative overflow-hidden border-border bg-gradient-to-br from-card to-secondary p-6 transition-all hover:shadow-lg hover:shadow-primary/20">
       <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-gradient-to-br opacity-10 transition-opacity group-hover:opacity-20" />
@@ -19,7 +21,7 @@ export function StatCard({ title, value, icon: Icon, color }: StatCardProps) {
             {title}
           </p>
           <p className="text-4xl font-bold text-foreground md:text-5xl">
-            {value.toLocaleString()}
+            {displayValue.toLocaleString()}
           </p>
         </div>
 
