@@ -27,6 +27,7 @@ export const API_ENDPOINTS = {
     CREATE: '/funciones',
     UPDATE: (id: string) => `/funciones/${id}`,
     DELETE: (id: string) => `/funciones/${id}`,
+    OCCUPIED_SEATS: (id: string) => `/funciones/${id}/asientos-ocupados`,
   },
   RESERVATIONS: {
     LIST: '/reservas',

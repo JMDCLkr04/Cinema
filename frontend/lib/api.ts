@@ -227,6 +227,14 @@ export const functionService = {
     });
     return data.funcion;
   },
+
+  getOccupiedSeats: (funcionId: string, token: string) =>
+    apiRequest<any[]>(
+      API_ENDPOINTS.FUNCTIONS.OCCUPIED_SEATS(funcionId),
+      "GET",
+      undefined,
+      token
+    ),
 };
 
 export const seatService = {

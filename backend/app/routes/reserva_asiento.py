@@ -8,6 +8,48 @@ from app.utils.dependencies import get_or_404
 
 router = APIRouter()
 
+@router.get("/funciones/{id_funcion}/asientos-ocupados", response_model=List[dict])
+async def get_asientos_ocupados_por_funcion(id_funcion: str, db: Session = Depends(get_db)):
+    """
+    Obtener todos los asientos ocupados para una función específica
+    
+    Devuelve una lista de asientos ocupados con su información:
+    {
+        "id_asiento": "uuid",
+        "numero": "numeric",
+        "id_sala": "uuid"
+    }
+    """
+    # Obtener todas las reservas para esta función
+    reservas = db.query(Reserva).filter(Reserva.id_funcion == id_funcion).all()
+    
+    if not reservas:
+        return []
+    
+    # Obtener todos los IDs de reservas (como UUID)
+    reserva_ids = [r.id_reserva for r in reservas]
+    
+    # Obtener todas las relaciones reserva-asiento para estas reservas
+    reserva_asientos = db.query(ReservaAsiento).filter(
+        ReservaAsiento.id_reserva.in_(reserva_ids)
+    ).all()
+    
+    if not reserva_asientos:
+        return []
+    
+    # Obtener los IDs de asientos ocupados (como UUID)
+    asiento_ids = [ra.id_asiento for ra in reserva_asientos]
+    
+    # Obtener la información completa de los asientos
+    asientos = db.query(Asiento).filter(Asiento.id_asiento.in_(asiento_ids)).all()
+    
+    return [{
+        "id_asiento": str(a.id_asiento),
+        "numero": float(a.numero) if a.numero else None,
+        "id_sala": str(a.id_sala) if a.id_sala else None,
+        "estado": a.estado if a.estado else None
+    } for a in asientos]
+
 @router.get("/reservas/{id_reserva}/asientos", response_model=List[dict])
 async def get_asientos_por_reserva(id_reserva: str, db: Session = Depends(get_db)):
     """

@@ -36,6 +36,29 @@ export default function SeatSelectionPage() {
     return String.fromCharCode(64 + num) // A=65, B=66, etc.
   }
 
+  // Función auxiliar para convertir letra de fila a número (A=1, B=2, etc.)
+  const rowLetterToNumber = (letter: string): number => {
+    return letter.charCodeAt(0) - 64 // A=65, B=66, etc.
+  }
+
+  // Función auxiliar para calcular el número único del asiento
+  // Formula: numero = (fila - 1) * columnas + columna
+  const calculateSeatNumber = (fila: string, numero: number, columnas: number): number => {
+    const filaNum = rowLetterToNumber(fila)
+    return (filaNum - 1) * columnas + numero
+  }
+
+  // Función auxiliar para convertir número único del asiento a fila y columna
+  // Inversa de calculateSeatNumber
+  const seatNumberToPosition = (seatNumber: number, columnas: number): { fila: string; columna: number } => {
+    const filaNum = Math.ceil(seatNumber / columnas)
+    const columna = ((seatNumber - 1) % columnas) + 1
+    return {
+      fila: numberToRowLetter(filaNum),
+      columna: columna
+    }
+  }
+
   // Función auxiliar para generar asientos basados en filas y columnas
   const generateSeats = (sala: Sala): Asiento[] => {
     const asientos: Asiento[] = []
@@ -126,13 +149,42 @@ export default function SeatSelectionPage() {
         // Generar asientos basados en las filas y columnas de la sala
         const asientos = generateSeats(sala)
         
+        // Obtener los asientos ocupados para esta función
+        try {
+          const occupiedSeatsData = await functionService.getOccupiedSeats(funcionId, token)
+          
+          // Crear un mapa de números de asiento ocupados
+          const occupiedSeatNumbers = new Set<number>()
+          occupiedSeatsData.forEach((seat: any) => {
+            if (seat.numero !== null && seat.numero !== undefined) {
+              const seatNum = typeof seat.numero === 'string' ? parseFloat(seat.numero) : seat.numero
+              if (!isNaN(seatNum)) {
+                occupiedSeatNumbers.add(seatNum)
+              }
+            }
+          })
+          
+          // Marcar los asientos ocupados en el grid
+          const asientosActualizados = asientos.map((asiento) => {
+            const seatNumber = calculateSeatNumber(asiento.fila, asiento.numero, sala.columnas)
+            if (occupiedSeatNumbers.has(seatNumber)) {
+              return { ...asiento, estado: "ocupado" as const }
+            }
+            return asiento
+          })
+          
+          setSeats(asientosActualizados)
+        } catch (error) {
+          console.warn('No se pudieron cargar los asientos ocupados, mostrando todos como disponibles:', error)
+          // Si hay error, mostrar todos los asientos como disponibles
+          setSeats(asientos)
+        }
+        
         setFuncionDetails({
           funcion,
           pelicula,
           sala,
         })
-        
-        setSeats(asientos)
       } catch (err) {
         console.error('Error al cargar los detalles de la función:', err)
         setFuncionDetails(null)
