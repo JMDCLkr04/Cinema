@@ -77,6 +77,8 @@ type Reserva {
 
   """Fecha en que se realizó la reserva"""
   fecha_reserva: String!
+  pelicula: Pelicula
+  funcion: Funciones
 }
 
 """Representa la relación entre una reserva y un asiento"""

@@ -1,5 +1,7 @@
 import { ObjectType, Field, Int } from '@nestjs/graphql';
 import { Usuario } from 'src/usuarios/entities/usuario.entity';
+import { Pelicula } from 'src/peliculas/entities/pelicula.entity';
+import { Funciones } from 'src/funciones/entities/funcione.entity';
 
 @ObjectType()
 export class Reserva {
@@ -29,4 +31,16 @@ export class Reserva {
 
   @Field(() => String, { description: 'Fecha en que se realizó la reserva' })
   fecha_reserva: string;
+
+  @Field(() => Pelicula, { 
+    description: 'Película asociada a la función de la reserva',
+    nullable: true 
+  })
+  pelicula?: Pelicula;
+
+  @Field(() => Funciones, { 
+    description: 'Función asociada a la reserva',
+    nullable: true 
+  })
+  funcion?: Funciones;
 }

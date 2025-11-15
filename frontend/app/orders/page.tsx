@@ -8,11 +8,12 @@ import { Footer } from "@/components/layout/footer"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import type { Reserva, Factura, Movie, Funcion } from "@/lib/types"
+import type { Reserva, Factura, Pelicula, Funcion } from "@/lib/types"
 import { Calendar, Clock, MapPin, Armchair, Receipt, CreditCard } from "lucide-react"
+import { reservationService } from "@/lib/api"
 
 interface OrderWithDetails extends Reserva {
-  movie: Movie
+  pelicula: Pelicula
   funcion: Funcion
   factura: Factura
 }
@@ -22,7 +23,7 @@ export default function OrdersPage() {
   const { user, isLoading } = useAuth()
   const [orders, setOrders] = useState<OrderWithDetails[]>([])
   const [isLoadingOrders, setIsLoadingOrders] = useState(true)
-
+  const token = localStorage.getItem("token")
   useEffect(() => {
     if (!isLoading && !user) {
       router.push("/login")
@@ -30,24 +31,8 @@ export default function OrdersPage() {
   }, [user, isLoading, router])
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      if (!user) return
-
-      try {
-        const response = await fetch(`/api/orders?userId=${user.id_usuario}`)
-        const data = await response.json()
-        setOrders(data)
-      } catch (error) {
-        console.error("Error fetching orders:", error)
-      } finally {
-        setIsLoadingOrders(false)
-      }
-    }
-
-    if (user) {
-      fetchOrders()
-    }
-  }, [user])
+    
+  }, [])
 
   if (isLoading || !user) {
     return (
@@ -87,7 +72,7 @@ export default function OrdersPage() {
                   <CardHeader>
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                       <div>
-                        <CardTitle className="text-2xl">{order.movie.titulo}</CardTitle>
+                        <CardTitle className="text-2xl">{order.pelicula.titulo}</CardTitle>
                         <p className="mt-1 text-sm text-muted-foreground">Reserva #{order.id_reserva.split("-")[1]}</p>
                       </div>
                       <Badge variant="secondary" className="w-fit bg-primary/10 text-primary">
@@ -104,7 +89,7 @@ export default function OrdersPage() {
                         <div>
                           <p className="text-sm font-medium text-foreground">Fecha</p>
                           <p className="text-sm text-muted-foreground">
-                            {new Date(order.funcion.fecha + "T00:00:00").toLocaleDateString("es-ES", {
+                            {new Date(order.funcion.fecha_hora + "T00:00:00").toLocaleDateString("es-ES", {
                               weekday: "short",
                               year: "numeric",
                               month: "short",
@@ -118,7 +103,10 @@ export default function OrdersPage() {
                         <Clock className="mt-0.5 h-5 w-5 text-muted-foreground" />
                         <div>
                           <p className="text-sm font-medium text-foreground">Hora</p>
-                          <p className="text-sm text-muted-foreground">{order.funcion.hora}</p>
+                          <p className="text-sm text-muted-foreground">{new Date(order.funcion.fecha_hora).toLocaleTimeString("es-ES", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}</p>
                         </div>
                       </div>
 
@@ -137,16 +125,15 @@ export default function OrdersPage() {
                     <div>
                       <div className="mb-3 flex items-center gap-2">
                         <Armchair className="h-5 w-5 text-muted-foreground" />
-                        <p className="font-medium text-foreground">Asientos ({order.asientos.length})</p>
+                        <p className="font-medium text-foreground">Asientos ({order.cantidad_asientos})</p>
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        {order.asientos.map((seat) => (
+                        {Array.from({ length: order.cantidad_asientos }).map((_, index) => (
                           <div
-                            key={seat.id_asiento}
+                            key={index}
                             className="rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground"
                           >
-                            {seat.fila}
-                            {seat.numero}
+                            {index + 1}
                           </div>
                         ))}
                       </div>
