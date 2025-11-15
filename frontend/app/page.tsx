@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import { MovieCard } from "@/components/movies/movie-card"
 import { MovieFilters } from "@/components/movies/movie-filters"
@@ -13,11 +14,19 @@ import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 
 export default function HomePage() {
-  const { token } = useAuth()
+  const router = useRouter()
+  const { token, user, isLoading } = useAuth()
   const [movies, setMovies] = useState<Pelicula[]>([])
   const [filteredMovies, setFilteredMovies] = useState<Pelicula[]>([])
   const [isLoadingMovies, setIsLoadingMovies] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  // Redirigir a /login si no hay usuario autenticado
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push('/login')
+    }
+  }, [user, isLoading, router])
 
   // Cargar películas cuando el token esté disponible
   useEffect(() => {
@@ -85,8 +94,8 @@ export default function HomePage() {
     setFilteredMovies(filtered)
   }
 
-  // Mostrar skeleton mientras se cargan las películas
-  if (isLoadingMovies) {
+  // Mostrar skeleton mientras se carga la autenticación o las películas
+  if (isLoading || isLoadingMovies) {
     return (
       <div className="container py-8">
         <div className="mb-8">
@@ -100,6 +109,11 @@ export default function HomePage() {
         </div>
       </div>
     )
+  }
+
+  // No renderizar nada si no hay usuario (mientras se redirige)
+  if (!user) {
+    return null
   }
 
   // Mostrar error si hay un problema al cargar las películas
