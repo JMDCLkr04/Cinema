@@ -26,6 +26,11 @@ interface OrderWithDetails extends Reserva {
     }>
   }
   factura: Factura
+  asientos?: Array<{
+    id_asiento: string
+    numero: string
+    estado: string
+  }>
 }
 
 export default function OrdersPage() {
@@ -112,6 +117,13 @@ export default function OrdersPage() {
             fecha_emision: reserva.fecha_reserva || new Date().toISOString(),
           }
 
+          // Mapear asientos
+          const asientos = reserva.asientos?.map((asiento: any) => ({
+            id_asiento: asiento.id_asiento,
+            numero: asiento.numero || '',
+            estado: asiento.estado || 'disponible'
+          })) || []
+
           return {
             id_reserva: reserva.id_reserva,
             id_usuario: reserva.id_usuario || user.id_usuario,
@@ -125,6 +137,7 @@ export default function OrdersPage() {
             pelicula,
             funcion,
             factura,
+            asientos,
           }
         })
 
@@ -252,14 +265,26 @@ export default function OrdersPage() {
                         <p className="font-medium text-foreground">Asientos ({order.cantidad_asientos})</p>
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        {Array.from({ length: order.cantidad_asientos }).map((_, index) => (
-                          <div
-                            key={index}
-                            className="rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground"
-                          >
-                            {index + 1}
-                          </div>
-                        ))}
+                        {order.asientos && order.asientos.length > 0 ? (
+                          order.asientos.map((asiento) => (
+                            <div
+                              key={asiento.id_asiento}
+                              className="rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground"
+                            >
+                              {asiento.numero}
+                            </div>
+                          ))
+                        ) : (
+                          // Fallback si no se pudieron cargar los asientos
+                          Array.from({ length: order.cantidad_asientos }).map((_, index) => (
+                            <div
+                              key={index}
+                              className="rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground"
+                            >
+                              {index + 1}
+                            </div>
+                          ))
+                        )}
                       </div>
                     </div>
 

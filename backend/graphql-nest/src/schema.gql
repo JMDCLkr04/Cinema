@@ -79,6 +79,7 @@ type Reserva {
   fecha_reserva: String!
   pelicula: Pelicula
   funcion: Funciones
+  asientos: [Asiento!]
 }
 
 """Representa la relación entre una reserva y un asiento"""

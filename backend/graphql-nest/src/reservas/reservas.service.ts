@@ -74,6 +74,20 @@ export class ReservasService {
         total: parseFloat(reserva.total) || 0,
         fecha_reserva: reserva.fecha_reserva || new Date().toISOString()
       }));
+  }
+
+  async getAsientosByReserva(id_reserva: string): Promise<any[]> {
+    try {
+      const asientos = await this.handleRequest<any[]>(`/reservas/${id_reserva}/asientos`);
+      return asientos.map(asiento => ({
+        id_asiento: asiento.id_asiento,
+        numero: String(asiento.numero) || '',
+        estado: asiento.estado || 'disponible'
+      }));
+    } catch (error) {
+      this.logger.error(`Error al obtener asientos para reserva ${id_reserva}:`, error);
+      return [];
+    }
   }  
 }
 

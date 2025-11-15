@@ -5,6 +5,7 @@ import { PeliculasService } from '../peliculas/peliculas.service';
 import { FuncionesService } from '../funciones/funciones.service';
 import { Pelicula } from '../peliculas/entities/pelicula.entity';
 import { Funciones } from '../funciones/entities/funcione.entity';
+import { Asiento } from '../asientos/entities/asiento.entity';
 
 @Resolver(() => Reserva)
 export class ReservasResolver {
@@ -75,6 +76,20 @@ export class ReservasResolver {
     } catch (error) {
       console.error(`Error al resolver funcion para reserva ${reserva.id_reserva}:`, error);
       return null;
+    }
+  }
+
+  @ResolveField(() => [Asiento], { name: 'asientos', nullable: true })
+  async resolveAsientos(@Parent() reserva: Reserva): Promise<Asiento[]> {
+    if (!reserva.id_reserva) {
+      return [];
+    }
+    try {
+      const asientos = await this.reservasService.getAsientosByReserva(reserva.id_reserva);
+      return asientos;
+    } catch (error) {
+      console.error(`Error al resolver asientos para reserva ${reserva.id_reserva}:`, error);
+      return [];
     }
   }
 }

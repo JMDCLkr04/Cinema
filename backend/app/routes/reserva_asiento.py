@@ -57,9 +57,9 @@ async def get_asientos_por_reserva(id_reserva: str, db: Session = Depends(get_db
     
     Devuelve una lista de asientos asociados a una reserva específica con la siguiente estructura:
     {
-        "id": "uuid",
-        "id_reserva": "uuid",
-        "id_asiento": "uuid"
+        "id_asiento": "uuid",
+        "numero": "string",
+        "estado": "string"
     }
     """
     # Verificar que la reserva existe
@@ -72,10 +72,20 @@ async def get_asientos_por_reserva(id_reserva: str, db: Session = Depends(get_db
         ReservaAsiento.id_reserva == id_reserva
     ).all()
     
+    if not reserva_asientos:
+        return []
+    
+    # Obtener los IDs de asientos
+    asiento_ids = [ra.id_asiento for ra in reserva_asientos]
+    
+    # Obtener la información completa de los asientos
+    asientos = db.query(Asiento).filter(Asiento.id_asiento.in_(asiento_ids)).all()
+    
     return [{
-        "id_reserva": str(ra.id_reserva),
-        "id_asiento": str(ra.id_asiento)
-    } for ra in reserva_asientos]
+        "id_asiento": str(a.id_asiento),
+        "numero": str(a.numero) if a.numero else '',
+        "estado": a.estado if a.estado else 'disponible'
+    } for a in asientos]
 
 @router.post(
     "/reservas/{id_reserva}/asientos/{id_asiento}", 

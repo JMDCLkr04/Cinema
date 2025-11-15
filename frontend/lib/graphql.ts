@@ -158,6 +158,11 @@ export const QUERIES = {
             columnas
           }
         }
+        asientos {
+          id_asiento
+          numero
+          estado
+        }
       }
     }
   `,
@@ -194,6 +199,11 @@ export const QUERIES = {
             columnas
           }
         }
+        asientos {
+          id_asiento
+          numero
+          estado
+        }
       }
     }
   `,
@@ -229,6 +239,11 @@ export const QUERIES = {
             filas
             columnas
           }
+        }
+        asientos {
+          id_asiento
+          numero
+          estado
         }
       }
     }

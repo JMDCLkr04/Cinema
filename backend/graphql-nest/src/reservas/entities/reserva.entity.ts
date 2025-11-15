@@ -2,6 +2,7 @@ import { ObjectType, Field, Int } from '@nestjs/graphql';
 import { Usuario } from 'src/usuarios/entities/usuario.entity';
 import { Pelicula } from 'src/peliculas/entities/pelicula.entity';
 import { Funciones } from 'src/funciones/entities/funcione.entity';
+import { Asiento } from 'src/asientos/entities/asiento.entity';
 
 @ObjectType()
 export class Reserva {
@@ -43,4 +44,10 @@ export class Reserva {
     nullable: true 
   })
   funcion?: Funciones;
+
+  @Field(() => [Asiento], { 
+    description: 'Asientos asociados a la reserva',
+    nullable: true 
+  })
+  asientos?: Asiento[];
 }
