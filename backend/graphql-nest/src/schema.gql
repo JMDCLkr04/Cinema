@@ -118,6 +118,7 @@ type Query {
   funcion(id: String!): Funciones!
   reservas: [Reserva!]!
   reserva(id: String!): Reserva!
+  reservasPorUsuario(id_usuario: String!): [Reserva!]!
   asientosPorReserva(id_reserva: String!): [ReservaAsiento!]!
   facturas: [Factura!]!
   factura(id: String!): Factura!

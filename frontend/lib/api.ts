@@ -285,6 +285,33 @@ export const reservationService = {
       undefined,
       token
     ),
+
+  // Métodos GraphQL
+  getAllGraphQL: async (token: string) => {
+    const data = await fetchGraphQL<{ reservas: any[] }>({
+      query: QUERIES.RESERVATIONS,
+      token,
+    });
+    return data.reservas || [];
+  },
+
+  getByIdGraphQL: async (id: string, token: string) => {
+    const data = await fetchGraphQL<{ reserva: any }>({
+      query: QUERIES.RESERVATION_BY_ID,
+      variables: { id },
+      token,
+    });
+    return data.reserva;
+  },
+
+  getByUserIdGraphQL: async (userId: string, token: string) => {
+    const data = await fetchGraphQL<{ reservasPorUsuario: any[] }>({
+      query: QUERIES.RESERVATIONS_BY_USER,
+      variables: { id_usuario: userId },
+      token,
+    });
+    return data.reservasPorUsuario || [];
+  },
 };
 
 export const facturaService = {

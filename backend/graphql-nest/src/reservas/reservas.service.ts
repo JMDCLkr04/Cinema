@@ -57,6 +57,23 @@ export class ReservasService {
       total: parseFloat(reserva.total) || 0,
       fecha_reserva: reserva.fecha_reserva || new Date().toISOString()
     };
+  }
+
+  async findByUsuario(id_usuario: string): Promise<Reserva[]> {
+    // Obtener todas las reservas y filtrar por id_usuario
+    // Nota: En el futuro se puede optimizar agregando un endpoint específico en el REST API
+    const reservas = await this.handleRequest<any[]>('/reservas');
+    return reservas
+      .filter(reserva => reserva.id_usuario === id_usuario)
+      .map(reserva => ({
+        id_reserva: reserva.id_reserva,
+        id_usuario: reserva.id_usuario,
+        id_funcion: reserva.id_funcion,
+        cantidad_asientos: parseInt(reserva.cantidad_asientos) || 0,
+        estado: reserva.estado || 'pendiente',
+        total: parseFloat(reserva.total) || 0,
+        fecha_reserva: reserva.fecha_reserva || new Date().toISOString()
+      }));
   }  
 }
 

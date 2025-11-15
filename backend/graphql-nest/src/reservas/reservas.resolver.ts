@@ -34,6 +34,16 @@ export class ReservasResolver {
     }
   }
 
+  @Query(() => [Reserva], { name: 'reservasPorUsuario' })
+  async findByUsuario(@Args('id_usuario', { type: () => String }) id_usuario: string) {
+    try {
+      return await this.reservasService.findByUsuario(id_usuario);
+    } catch (error) {
+      console.error(`Error en ReservasResolver.findByUsuario(${id_usuario}):`, error);
+      throw error;
+    }
+  }
+
   @ResolveField(() => Pelicula, { name: 'pelicula', nullable: true })
   async resolvePelicula(@Parent() reserva: Reserva): Promise<Pelicula | null> {
     if (!reserva.id_funcion) {

@@ -10,20 +10,30 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import type { Reserva, Factura, Pelicula, Funcion } from "@/lib/types"
 import { Calendar, Clock, MapPin, Armchair, Receipt, CreditCard } from "lucide-react"
-import { reservationService } from "@/lib/api"
+import { reservationService, facturaService } from "@/lib/api"
 
 interface OrderWithDetails extends Reserva {
   pelicula: Pelicula
-  funcion: Funcion
+  funcion: Funcion & {
+    salas?: Array<{
+      id_sala: string
+      nombre: string
+      capacidad: number
+      tipo: string
+      estado: string
+      filas: number
+      columnas: number
+    }>
+  }
   factura: Factura
 }
 
 export default function OrdersPage() {
   const router = useRouter()
-  const { user, isLoading } = useAuth()
+  const { user, isLoading, token } = useAuth()
   const [orders, setOrders] = useState<OrderWithDetails[]>([])
   const [isLoadingOrders, setIsLoadingOrders] = useState(true)
-  const token = localStorage.getItem("token")
+
   useEffect(() => {
     if (!isLoading && !user) {
       router.push("/login")
@@ -31,8 +41,104 @@ export default function OrdersPage() {
   }, [user, isLoading, router])
 
   useEffect(() => {
-    
-  }, [])
+    const fetchOrders = async () => {
+      if (!user || !token || !user.id_usuario) {
+        setIsLoadingOrders(false)
+        return
+      }
+
+      try {
+        setIsLoadingOrders(true)
+
+        // Obtener reservas del usuario usando GraphQL
+        const reservasData = await reservationService.getByUserIdGraphQL(user.id_usuario, token)
+
+        // Obtener todas las facturas para buscar las correspondientes
+        let facturasMap: Map<string, Factura> = new Map()
+        try {
+          const facturas = await facturaService.getAll(token)
+          facturas.forEach((factura: Factura) => {
+            if (factura.id_reserva) {
+              facturasMap.set(factura.id_reserva, factura)
+            }
+          })
+        } catch (error) {
+          console.warn("No se pudieron cargar las facturas:", error)
+        }
+
+        // Mapear las reservas al formato esperado
+        const ordersData: OrderWithDetails[] = reservasData.map((reserva: any) => {
+          // Mapear película
+          const pelicula: Pelicula = {
+            id_pelicula: reserva.pelicula?.id_pelicula || '',
+            titulo: reserva.pelicula?.titulo || '',
+            genero: reserva.pelicula?.genero || '',
+            descripcion: reserva.pelicula?.descripcion || '',
+            clasificacion: reserva.pelicula?.clasificacion || '',
+            duracion: typeof reserva.pelicula?.duracion === 'string' 
+              ? parseInt(reserva.pelicula.duracion) || 0 
+              : reserva.pelicula?.duracion || 0,
+            imagen_url: reserva.pelicula?.image_url || '',
+          }
+
+          // Mapear función
+          const funcion: Funcion & {
+            salas?: Array<{
+              id_sala: string
+              nombre: string
+              capacidad: number
+              tipo: string
+              estado: string
+              filas: number
+              columnas: number
+            }>
+          } = {
+            id_funcion: reserva.funcion?.id_funcion || reserva.id_funcion || '',
+            id_pelicula: pelicula.id_pelicula,
+            id_sala: reserva.funcion?.salas?.[0]?.id_sala || '',
+            fecha_hora: reserva.funcion?.fecha_hora || '',
+            precio: typeof reserva.funcion?.precio === 'string' 
+              ? parseFloat(reserva.funcion.precio) 
+              : reserva.funcion?.precio || 0,
+            salas: reserva.funcion?.salas || [],
+          }
+
+          // Obtener factura asociada o crear una factura por defecto
+          const factura = facturasMap.get(reserva.id_reserva) || {
+            id_factura: '',
+            id_reserva: reserva.id_reserva,
+            total: typeof reserva.total === 'string' ? parseFloat(reserva.total) : reserva.total || 0,
+            metodo_pago: 'No especificado',
+            fecha_emision: reserva.fecha_reserva || new Date().toISOString(),
+          }
+
+          return {
+            id_reserva: reserva.id_reserva,
+            id_usuario: reserva.id_usuario || user.id_usuario,
+            id_funcion: funcion.id_funcion,
+            fecha_reserva: reserva.fecha_reserva || new Date().toISOString(),
+            total: typeof reserva.total === 'string' ? parseFloat(reserva.total) : reserva.total || 0,
+            cantidad_asientos: typeof reserva.cantidad_asientos === 'string' 
+              ? parseInt(reserva.cantidad_asientos) 
+              : reserva.cantidad_asientos || 0,
+            estado: reserva.estado || 'confirmada',
+            pelicula,
+            funcion,
+            factura,
+          }
+        })
+
+        setOrders(ordersData)
+      } catch (error) {
+        console.error('Error al cargar las reservas:', error)
+        setOrders([])
+      } finally {
+        setIsLoadingOrders(false)
+      }
+    }
+
+    fetchOrders()
+  }, [user, token, router])
 
   if (isLoading || !user) {
     return (
@@ -89,12 +195,19 @@ export default function OrdersPage() {
                         <div>
                           <p className="text-sm font-medium text-foreground">Fecha</p>
                           <p className="text-sm text-muted-foreground">
-                            {new Date(order.funcion.fecha_hora + "T00:00:00").toLocaleDateString("es-ES", {
-                              weekday: "short",
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            })}
+                            {(() => {
+                              const fechaHora = order.funcion.fecha_hora
+                              const date = fechaHora.includes('T') 
+                                ? new Date(fechaHora) 
+                                : new Date(fechaHora + "T00:00:00")
+                              return date.toLocaleDateString("es-ES", {
+                                weekday: "short",
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                                timeZone: "UTC"
+                              })
+                            })()}
                           </p>
                         </div>
                       </div>
@@ -103,10 +216,19 @@ export default function OrdersPage() {
                         <Clock className="mt-0.5 h-5 w-5 text-muted-foreground" />
                         <div>
                           <p className="text-sm font-medium text-foreground">Hora</p>
-                          <p className="text-sm text-muted-foreground">{new Date(order.funcion.fecha_hora).toLocaleTimeString("es-ES", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {(() => {
+                              const fechaHora = order.funcion.fecha_hora
+                              const date = fechaHora.includes('T') 
+                                ? new Date(fechaHora) 
+                                : new Date(fechaHora + "T00:00:00")
+                              return date.toLocaleTimeString("es-ES", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                timeZone: "UTC"
+                              })
+                            })()}
+                          </p>
                         </div>
                       </div>
 
@@ -114,7 +236,9 @@ export default function OrdersPage() {
                         <MapPin className="mt-0.5 h-5 w-5 text-muted-foreground" />
                         <div>
                           <p className="text-sm font-medium text-foreground">Sala</p>
-                          <p className="text-sm text-muted-foreground">Sala {order.funcion.id_sala.replace("s", "")}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {order.funcion.salas?.[0]?.nombre || `Sala ${order.funcion.id_sala}`}
+                          </p>
                         </div>
                       </div>
                     </div>

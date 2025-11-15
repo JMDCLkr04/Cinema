@@ -125,4 +125,112 @@ export const QUERIES = {
       }
     }
   `,
+  RESERVATIONS: `
+    query GetReservations {
+      reservas {
+        id_reserva
+        id_usuario
+        id_funcion
+        cantidad_asientos
+        estado
+        total
+        fecha_reserva
+        pelicula {
+          id_pelicula
+          titulo
+          genero
+          descripcion
+          clasificacion
+          duracion
+          image_url
+        }
+        funcion {
+          id_funcion
+          fecha_hora
+          precio
+          salas {
+            id_sala
+            nombre
+            capacidad
+            tipo
+            estado
+            filas
+            columnas
+          }
+        }
+      }
+    }
+  `,
+  RESERVATION_BY_ID: `
+    query GetReservationById($id: String!) {
+      reserva(id: $id) {
+        id_reserva
+        id_usuario
+        id_funcion
+        cantidad_asientos
+        estado
+        total
+        fecha_reserva
+        pelicula {
+          id_pelicula
+          titulo
+          genero
+          descripcion
+          clasificacion
+          duracion
+          image_url
+        }
+        funcion {
+          id_funcion
+          fecha_hora
+          precio
+          salas {
+            id_sala
+            nombre
+            capacidad
+            tipo
+            estado
+            filas
+            columnas
+          }
+        }
+      }
+    }
+  `,
+  RESERVATIONS_BY_USER: `
+    query GetReservationsByUser($id_usuario: String!) {
+      reservasPorUsuario(id_usuario: $id_usuario) {
+        id_reserva
+        id_usuario
+        id_funcion
+        cantidad_asientos
+        estado
+        total
+        fecha_reserva
+        pelicula {
+          id_pelicula
+          titulo
+          genero
+          descripcion
+          clasificacion
+          duracion
+          image_url
+        }
+        funcion {
+          id_funcion
+          fecha_hora
+          precio
+          salas {
+            id_sala
+            nombre
+            capacidad
+            tipo
+            estado
+            filas
+            columnas
+          }
+        }
+      }
+    }
+  `,
 };
